@@ -11,10 +11,16 @@ var baseStyle = lipgloss.NewStyle().
 Foreground(lipgloss.Color("#fff")).
 Background(lipgloss.Color("#7D54F2"))
 
+type tile int
+
+const (
+	empty tile = iota
+	wall
+)
 
 type model struct {
-	x, y  int
-	grid [][]bool
+	x, y int
+	grid [][]tile
 }
 
 const (
@@ -34,7 +40,7 @@ func (m model) View() string {
 		for x := 0; x < width; x++ {
 			if x == m.x && y == m.y {
 				line += baseStyle.Render("我")
-			} else if m.grid[y][x] {
+			} else if m.grid[y][x] == wall {
 				line += "牆"
 			} else {
 				line += "　"
@@ -54,19 +60,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "h": // left
-			if m.x > 0 && !m.grid[m.y][m.x-1] {
+			if m.x > 0 && m.grid[m.y][m.x-1] != wall {
 				m.x--
 			}
 		case "j": // down
-			if m.y < height-1 && !m.grid[m.y+1][m.x] {
+			if m.y < height-1 && m.grid[m.y+1][m.x] != wall {
 				m.y++
 			}
 		case "k": // up
-			if m.y > 0 && !m.grid[m.y-1][m.x] {
+			if m.y > 0 && m.grid[m.y-1][m.x] != wall {
 				m.y--
 			}
 		case "l": // right
-			if m.x < width-1 && !m.grid[m.y][m.x+1] {
+			if m.x < width-1 && m.grid[m.y][m.x+1] != wall {
 				m.x++
 			}
 		}
@@ -76,17 +82,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	grid := make([][]bool, height)
+	grid := make([][]tile, height)
 	for i := range grid {
-		grid[i] = make([]bool, width)
+		grid[i] = make([]tile, width)
 	}
 
 	// Add some walls
-	grid[5][5] = true
-	grid[5][6] = true
-	grid[5][7] = true
-	grid[4][5] = true
-	grid[6][5] = true
+	grid[5][5] = wall
+	grid[5][6] = wall
+	grid[5][7] = wall
+	grid[4][5] = wall
+	grid[6][5] = wall
 
 	p := tea.NewProgram(model{x: 0, y: 0, grid: grid})
 
