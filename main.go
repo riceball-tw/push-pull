@@ -7,21 +7,36 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var baseStyle = lipgloss.NewStyle().
-Foreground(lipgloss.Color("#fff")).
-Background(lipgloss.Color("#7D54F2"))
-
-var backgroundStyle = lipgloss.NewStyle().
-Foreground(lipgloss.Color("#fff")).
-Background(lipgloss.Color("#333")) 
-
-
 type tile int
 
 const (
 	empty tile = iota
 	wall
 )
+
+type tileInfo struct {
+	style lipgloss.Style
+	char  string
+}
+
+var tiles = map[tile]tileInfo{
+	empty: {
+		style: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#fff")).
+			Background(lipgloss.Color("#333")),
+		char: "　",
+	},
+	wall: {
+		style: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#fff")).
+			Background(lipgloss.Color("#481309")),
+		char: "牆",
+	},
+}
+
+var playerStyle = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("#fff")).
+	Background(lipgloss.Color("#7D54F2"))
 
 type model struct {
 	x, y int
@@ -44,17 +59,16 @@ func (m model) View() string {
 		line := ""
 		for x := 0; x < width; x++ {
 			if x == m.x && y == m.y {
-				line += baseStyle.Render("我")
-			} else if m.grid[y][x] == wall {
-				line += "牆"
+				line += playerStyle.Render("我")
 			} else {
-				line += backgroundStyle.Render("　")
+				info := tiles[m.grid[y][x]]
+				line += info.style.Render(info.char)
 			}
 		}
 		s += line + "\n"
 	}
 
-	s += "\n(use h, j, k, l to move, X is a wall, ctrl+c to quit)"
+	s += "\n(use h, j, k, l to move, q to quit)"
 	return s
 }
 
