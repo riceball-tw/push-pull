@@ -136,40 +136,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	grid2 := [][]Tile{
-		{wall, wall, wall, wall, wall},
-		{wall, empty, empty, empty, wall},
-		{wall, empty, wall, empty, wall},
-		{wall, empty, empty, empty, wall},
-		{wall, wall, wall, wall, wall},
-	}
-
-	grid1 := [][]Tile{
-		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
-		{empty, empty, wall, wall, wall, empty, empty, empty, empty, empty},
-		{empty, water, wall, empty, empty, empty, empty, empty, empty, empty},
-		{empty, water, wall, newBox(), empty, empty, empty, newBox(), empty, empty},
-		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
-		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
-	}
-
-	// Add a door from grid1 to grid2
-	grid1[0][5] = doorTile{
-		baseTile:   baseTile{kind: doorKind, sound: "creak"},
-		targetGrid: grid2,
-		targetX:    2,
-		targetY:    2,
-	}
-
-	// Add a door from grid2 to grid1
-	grid2[1][1] = doorTile{
-		baseTile:   baseTile{kind: doorKind, sound: "creak"},
-		targetGrid: grid1,
-		targetX:    0,
-		targetY:    0,
-	}
-
-	p := tea.NewProgram(model{x: 0, y: 0, grid: grid1})
+	p := tea.NewProgram(model{x: 0, y: 0, grid: level})
 
 	sr := beep.SampleRate(44100)
 	err := speaker.Init(sr, sr.N(time.Second/10))
