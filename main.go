@@ -28,17 +28,17 @@ type model struct {
 	grid [][]tile
 }
 
-const (
-	width  = 20
-	height = 10
-)
-
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
 func (m model) View() string {
 	var s string
+	height := len(m.grid)
+	if height == 0 {
+		return "Empty world"
+	}
+	width := len(m.grid[0])
 
 	for y := 0; y < height; y++ {
 		line := ""
@@ -59,6 +59,12 @@ func (m model) View() string {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	height := len(m.grid)
+	if height == 0 {
+		return m, nil
+	}
+	width := len(m.grid[0])
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -87,17 +93,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	grid := make([][]tile, height)
-	for i := range grid {
-		grid[i] = make([]tile, width)
+	grid := [][]tile{
+		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+		{empty, empty, wall,  wall,  wall,  empty, empty, empty, empty, empty},
+		{empty, empty, wall,  empty, empty, empty, empty, empty, empty, empty},
+		{empty, empty, wall,  empty, empty, empty, empty, empty, empty, empty},
+		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 	}
-
-	// Add some walls
-	grid[5][5] = wall
-	grid[5][6] = wall
-	grid[5][7] = wall
-	grid[4][5] = wall
-	grid[6][5] = wall
 
 	p := tea.NewProgram(model{x: 0, y: 0, grid: grid})
 
