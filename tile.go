@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -22,6 +24,7 @@ type MoveResult struct {
 type Tile interface {
 	Kind() tileKind
 	MoveInto(m *model, nx, ny, dx, dy int) MoveResult
+	Count() int
 }
 
 type baseTile struct {
@@ -31,6 +34,10 @@ type baseTile struct {
 
 func (t baseTile) Kind() tileKind {
 	return t.kind
+}
+
+func (t baseTile) Count() int {
+	return 0
 }
 
 type emptyTile struct {
@@ -75,9 +82,10 @@ func (t doorTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 
 type boxTile struct {
 	baseTile
+	count int
 }
 
-func (t boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 	height := len(m.grid)
 	width := len(m.grid[0])
 	nnx, nny := nx+dx, ny+dy
@@ -85,6 +93,7 @@ func (t boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 		behindBoxTile := m.grid[nny][nnx]
 		if behindBoxTile.Kind() == emptyKind {
 			// Push the box
+			t.count++
 			m.grid[nny][nnx] = m.grid[ny][nx]
 			m.grid[ny][nx] = empty
 			m.x, m.y = nx, ny
@@ -98,8 +107,11 @@ var (
 	empty = emptyTile{baseTile{kind: emptyKind, sound: "walk"}}
 	wall  = wallTile{baseTile{kind: wallKind}}
 	water = waterTile{baseTile{kind: waterKind, sound: "splash"}}
-	box   = boxTile{baseTile{kind: boxKind, sound: "push"}}
 )
+
+func newBox() *boxTile {
+	return &boxTile{baseTile: baseTile{kind: boxKind, sound: "push"}}
+}
 
 type tileInfo struct {
 	style lipgloss.Style
@@ -137,6 +149,24 @@ var tiles = map[tileKind]tileInfo{
 			Background(lipgloss.Color("#B87333")),
 		char: "箱",
 	},
+}
+
+func (t *boxTile) DisplayChar() string {
+	if t.count == 0 {
+		return tiles[boxKind].char
+	}
+	if t.count <= 9 {
+		fullWidthNums := []string{"０", "１", "２", "３", "４", "５", "６", "７", "８", "９"}
+		return fullWidthNums[t.count]
+	}
+	if t.count <= 99 {
+		return fmt.Sprintf("%02d", t.count)
+	}
+	return "＋"
+}
+
+func (t *boxTile) Count() int {
+	return t.count
 }
 
 var playerStyle = lipgloss.NewStyle().

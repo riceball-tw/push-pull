@@ -33,8 +33,13 @@ func (m model) View() string {
 			if x == m.x && y == m.y {
 				line += playerStyle.Render("我")
 			} else {
-				info := tiles[m.grid[y][x].Kind()]
-				line += info.style.Render(info.char)
+				tile := m.grid[y][x]
+				info := tiles[tile.Kind()]
+				char := info.char
+				if bt, ok := tile.(*boxTile); ok {
+					char = bt.DisplayChar()
+				}
+				line += info.style.Render(char)
 			}
 		}
 		s += line + "\n"
@@ -104,7 +109,7 @@ func main() {
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, wall, wall, wall, empty, empty, empty, empty, empty},
 		{empty, water, wall, empty, empty, empty, empty, empty, empty, empty},
-		{empty, water, wall, box, empty, empty, empty, box, empty, empty},
+		{empty, water, wall, newBox(), empty, empty, empty, newBox(), empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 	}
