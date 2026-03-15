@@ -20,6 +20,44 @@ const (
 	boxKind
 )
 
+type MoveResult struct {
+	CanMove bool
+	Sound   string
+}
+
+func (t tile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+	height := len(m.grid)
+	width := len(m.grid[0])
+
+	switch t.kind {
+	case emptyKind, waterKind:
+		m.x, m.y = nx, ny
+		return MoveResult{CanMove: true, Sound: t.sound}
+	case doorKind:
+		m.grid = t.targetGrid
+		m.x = t.targetX
+		m.y = t.targetY
+		return MoveResult{CanMove: true, Sound: t.sound}
+	case boxKind:
+		nnx, nny := nx+dx, ny+dy
+		if nnx >= 0 && nnx < width && nny >= 0 && nny < height {
+			behindBoxTile := m.grid[nny][nnx]
+			if behindBoxTile.kind == emptyKind {
+				// Push the box
+				m.grid[nny][nnx] = m.grid[ny][nx]
+				m.grid[ny][nx] = empty
+				m.x, m.y = nx, ny
+				return MoveResult{CanMove: true, Sound: t.sound}
+			}
+		}
+		return MoveResult{CanMove: false}
+	case wallKind:
+		return MoveResult{CanMove: false}
+	default:
+		return MoveResult{CanMove: false}
+	}
+}
+
 type tile struct {
 	kind       tileKind
 	targetGrid [][]tile
@@ -148,38 +186,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			nx, ny := m.x+dx, m.y+dy
 			if nx >= 0 && nx < width && ny >= 0 && ny < height {
 				targetTile := m.grid[ny][nx]
-				if targetTile.kind == emptyKind || targetTile.kind == doorKind || targetTile.kind == waterKind {
-					m.x, m.y = nx, ny
-					if targetTile.sound != "" {
-						cmd = playSound(targetTile.sound)
-					}
-				} else if targetTile.kind == boxKind {
-					nnx, nny := nx+dx, ny+dy
-					if nnx >= 0 && nnx < width && nny >= 0 && nny < height {
-						behindBoxTile := m.grid[nny][nnx]
-						if behindBoxTile.kind == emptyKind {
-							// Push the box
-							m.grid[nny][nnx] = m.grid[ny][nx]
-							m.grid[ny][nx] = empty
-							m.x, m.y = nx, ny
-							if targetTile.sound != "" {
-								cmd = playSound(targetTile.sound)
-							}
-						}
-					}
+				res := targetTile.MoveInto(&m, nx, ny, dx, dy)
+				if res.CanMove && res.Sound != "" {
+					cmd = playSound(res.Sound)
 				}
 			}
-		}
-	}
-
-	// teleport if on door
-	if m.grid[m.y][m.x].kind == doorKind {
-		door := m.grid[m.y][m.x]
-		m.grid = door.targetGrid
-		m.x = door.targetX
-		m.y = door.targetY
-		if m.grid[m.y][m.x].sound != "" {
-			cmd = playSound(m.grid[m.y][m.x].sound)
 		}
 	}
 
