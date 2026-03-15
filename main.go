@@ -28,7 +28,7 @@ type tile struct {
 }
 
 var (
-	empty = tile{kind: emptyKind}
+	empty = tile{kind: emptyKind, sound: "walk"}
 	wall  = tile{kind: wallKind}
 	water = tile{kind: waterKind, sound: "splash"}
 )
