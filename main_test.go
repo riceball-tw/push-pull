@@ -6,6 +6,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+var (
+	box = newBox()
+)
+
 func Test_Character_Movement(t *testing.T) {
 	grid := [][]Tile{
 		{empty, empty, empty},
@@ -416,5 +420,63 @@ func Test_Push_Box(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func Test_Undo(t *testing.T) {
+	grid := [][]Tile{
+		{empty, empty, empty},
+		{empty, box,   empty},
+		{empty, empty, empty},
+	}
+
+	m := model{
+		x:    0,
+		y:    0,
+		grid: grid,
+	}
+
+	// Move right to (1,0)
+	msgL := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
+	m1, _ := m.Update(msgL)
+	res1 := m1.(model)
+	if res1.x != 1 || res1.moves != 1 {
+		t.Fatalf("Move 1 failed: got (x:%d, moves:%d), want (x:1, moves:1)", res1.x, res1.moves)
+	}
+
+	// Move down to (1,1) pushing box to (1,2)
+	msgJ := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
+	m2, _ := res1.Update(msgJ)
+	res2 := m2.(model)
+	if res2.y != 1 || res2.moves != 2 {
+		t.Fatalf("Move 2 failed: got (y:%d, moves:%d), want (y:1, moves:2)", res2.y, res2.moves)
+	}
+	if res2.grid[2][1].Kind() != boxKind {
+		t.Fatal("Box not pushed to (1,2)")
+	}
+
+	// Undo move 2
+	msgU := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("u")}
+	m3, _ := res2.Update(msgU)
+	res3 := m3.(model)
+	if res3.x != 1 || res3.y != 0 || res3.moves != 1 {
+		t.Errorf("Undo failed: got (x:%d, y:%d, moves:%d), want (x:1, y:0, moves:1)", res3.x, res3.y, res3.moves)
+	}
+	if res3.grid[1][1].Kind() != boxKind || res3.grid[2][1].Kind() != emptyKind {
+		t.Error("Box state not restored correctly after undo")
+	}
+
+	// Undo move 1
+	m4, _ := res3.Update(msgU)
+	res4 := m4.(model)
+	if res4.x != 0 || res4.y != 0 || res4.moves != 0 {
+		t.Errorf("Undo 2 failed: got (x:%d, y:%d, moves:%d), want (x:0, y:0, moves:0)", res4.x, res4.y, res4.moves)
+	}
+
+	// Undo when no history
+	m5, _ := res4.Update(msgU)
+	res5 := m5.(model)
+	if res5.x != 0 || res5.y != 0 || res5.moves != 0 {
+		t.Error("Undo with empty history changed state")
 	}
 }

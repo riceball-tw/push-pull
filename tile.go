@@ -25,6 +25,7 @@ type Tile interface {
 	Kind() tileKind
 	MoveInto(m *model, nx, ny, dx, dy int) MoveResult
 	Count() int
+	Clone() Tile
 }
 
 type baseTile struct {
@@ -49,12 +50,20 @@ func (t emptyTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 	return MoveResult{CanMove: true, Sound: t.sound}
 }
 
+func (t emptyTile) Clone() Tile {
+	return t
+}
+
 type wallTile struct {
 	baseTile
 }
 
 func (t wallTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 	return MoveResult{CanMove: false}
+}
+
+func (t wallTile) Clone() Tile {
+	return t
 }
 
 type waterTile struct {
@@ -64,6 +73,10 @@ type waterTile struct {
 func (t waterTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 	m.x, m.y = nx, ny
 	return MoveResult{CanMove: true, Sound: t.sound}
+}
+
+func (t waterTile) Clone() Tile {
+	return t
 }
 
 type doorTile struct {
@@ -78,6 +91,10 @@ func (t doorTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 	m.x = t.targetX
 	m.y = t.targetY
 	return MoveResult{CanMove: true, Sound: t.sound}
+}
+
+func (t doorTile) Clone() Tile {
+	return t
 }
 
 type boxTile struct {
@@ -101,6 +118,13 @@ func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 		}
 	}
 	return MoveResult{CanMove: false}
+}
+
+func (t *boxTile) Clone() Tile {
+	return &boxTile{
+		baseTile: t.baseTile,
+		count:    t.count,
+	}
 }
 
 var (

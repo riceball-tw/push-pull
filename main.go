@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -10,9 +11,31 @@ import (
 )
 
 type model struct {
-	x, y  int
-	grid  [][]Tile
-	sound string
+	x, y    int
+	grid    [][]Tile
+	sound   string
+	moves   int
+	history []state
+}
+
+type state struct {
+	x, y int
+	grid [][]Tile
+}
+
+func (m model) snapshot() state {
+	newGrid := make([][]Tile, len(m.grid))
+	for y := range m.grid {
+		newGrid[y] = make([]Tile, len(m.grid[y]))
+		for x := range m.grid[y] {
+			newGrid[y][x] = m.grid[y][x].Clone()
+		}
+	}
+	return state{
+		x:    m.x,
+		y:    m.y,
+		grid: newGrid,
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -49,7 +72,8 @@ func (m model) View() string {
 		s += "\n* Playing sound: " + m.sound + " *"
 	}
 
-	s += "\n(use h, j, k, l to move, q to quit)"
+	s += "\n(use h, j, k, l to move, u to undo, q to quit)"
+	s += fmt.Sprintf("\nMoves: %d", m.moves)
 	return s
 }
 
@@ -71,6 +95,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "u":
+			if len(m.history) > 0 {
+				prev := m.history[len(m.history)-1]
+				m.history = m.history[:len(m.history)-1]
+				m.x = prev.x
+				m.y = prev.y
+				m.grid = prev.grid
+				m.moves--
+			}
+			return m, nil
 		case "h": // left
 			dx = -1
 		case "j": // down
@@ -84,10 +118,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if dx != 0 || dy != 0 {
 			nx, ny := m.x+dx, m.y+dy
 			if nx >= 0 && nx < width && ny >= 0 && ny < height {
+				currentState := m.snapshot()
 				targetTile := m.grid[ny][nx]
 				res := targetTile.MoveInto(&m, nx, ny, dx, dy)
-				if res.CanMove && res.Sound != "" {
-					cmd = playSound(res.Sound)
+				if res.CanMove {
+					m.history = append(m.history, currentState)
+					m.moves++
+					if res.Sound != "" {
+						cmd = playSound(res.Sound)
+					}
 				}
 			}
 		}
