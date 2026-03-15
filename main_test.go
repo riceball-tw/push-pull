@@ -132,3 +132,46 @@ func Test_Quit(t *testing.T) {
 		t.Error("expected tea.Quit for 'ctrl+c'")
 	}
 }
+
+func Test_Door_Teleport(t *testing.T) {
+	grid2 := [][]tile{
+		{empty, empty, empty},
+		{empty, empty, empty},
+		{empty, empty, empty},
+	}
+	grid1 := [][]tile{
+		{empty, empty, empty},
+		{empty, empty, empty},
+		{empty, empty, empty},
+	}
+
+	// Place a door in grid1 at (1,1) leading to grid2 at (2,2)
+	grid1[1][1] = tile{
+		kind:       doorKind,
+		targetGrid: grid2,
+		targetX:    2,
+		targetY:    2,
+	}
+
+	m := model{
+		x:    0,
+		y:    1,
+		grid: grid1,
+	}
+
+	// Move right from (0,1) to (1,1), which is a door
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
+	newModel, _ := m.Update(msg)
+	res := newModel.(model)
+
+	if res.x != 2 || res.y != 2 {
+		t.Errorf("expected teleport to (2,2), got (%d,%d)", res.x, res.y)
+	}
+
+	// Verify grid changed (grid2 should have different pointer/identity if we want to be strict,
+	// but here we check if a tile change in grid2 is reflected in res.grid)
+	grid2[0][0] = wall
+	if res.grid[0][0].kind != wallKind {
+		t.Errorf("expected grid to be grid2")
+	}
+}

@@ -7,11 +7,24 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type tile int
+type tileKind int
 
 const (
-	empty tile = iota
-	wall
+	emptyKind tileKind = iota
+	wallKind
+	doorKind
+)
+
+type tile struct {
+	kind       tileKind
+	targetGrid [][]tile
+	targetX    int
+	targetY    int
+}
+
+var (
+	empty = tile{kind: emptyKind}
+	wall  = tile{kind: wallKind}
 )
 
 type tileInfo struct {
@@ -19,18 +32,24 @@ type tileInfo struct {
 	char  string
 }
 
-var tiles = map[tile]tileInfo{
-	empty: {
+var tiles = map[tileKind]tileInfo{
+	emptyKind: {
 		style: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#fff")).
 			Background(lipgloss.Color("#333")),
 		char: "　",
 	},
-	wall: {
+	wallKind: {
 		style: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#fff")).
 			Background(lipgloss.Color("#481309")),
 		char: "牆",
+	},
+	doorKind: {
+		style: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#fff")).
+			Background(lipgloss.Color("#553311")),
+		char: "門",
 	},
 }
 
@@ -61,7 +80,7 @@ func (m model) View() string {
 			if x == m.x && y == m.y {
 				line += playerStyle.Render("我")
 			} else {
-				info := tiles[m.grid[y][x]]
+				info := tiles[m.grid[y][x].kind]
 				line += info.style.Render(info.char)
 			}
 		}
@@ -85,38 +104,70 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "h": // left
-			if m.x > 0 && m.grid[m.y][m.x-1] != wall {
+			if m.x > 0 && m.grid[m.y][m.x-1].kind != wallKind {
 				m.x--
 			}
 		case "j": // down
-			if m.y < height-1 && m.grid[m.y+1][m.x] != wall {
+			if m.y < height-1 && m.grid[m.y+1][m.x].kind != wallKind {
 				m.y++
 			}
 		case "k": // up
-			if m.y > 0 && m.grid[m.y-1][m.x] != wall {
+			if m.y > 0 && m.grid[m.y-1][m.x].kind != wallKind {
 				m.y--
 			}
 		case "l": // right
-			if m.x < width-1 && m.grid[m.y][m.x+1] != wall {
+			if m.x < width-1 && m.grid[m.y][m.x+1].kind != wallKind {
 				m.x++
 			}
 		}
+	}
+
+	// teleport if on door
+	if m.grid[m.y][m.x].kind == doorKind {
+		door := m.grid[m.y][m.x]
+		m.grid = door.targetGrid
+		m.x = door.targetX
+		m.y = door.targetY
 	}
 
 	return m, nil
 }
 
 func main() {
-	grid := [][]tile{
+	grid2 := [][]tile{
+		{wall, wall, wall, wall, wall},
+		{wall, empty, empty, empty, wall},
+		{wall, empty, wall, empty, wall},
+		{wall, empty, empty, empty, wall},
+		{wall, wall, wall, wall, wall},
+	}
+
+	grid1 := [][]tile{
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
-		{empty, empty, wall,  wall,  wall,  empty, empty, empty, empty, empty},
-		{empty, empty, wall,  empty, empty, empty, empty, empty, empty, empty},
-		{empty, empty, wall,  empty, empty, empty, empty, empty, empty, empty},
+		{empty, empty, wall, wall, wall, empty, empty, empty, empty, empty},
+		{empty, empty, wall, empty, empty, empty, empty, empty, empty, empty},
+		{empty, empty, wall, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 	}
 
-	p := tea.NewProgram(model{x: 0, y: 0, grid: grid})
+	// Add a door from grid1 to grid2
+	grid1[0][5] = tile{
+		kind:       doorKind,
+		targetGrid: grid2,
+		targetX:    2,
+		targetY:    2,
+	}
+
+	// Add a door from grid2 to grid1
+	grid2[1][1] = tile{
+		kind:       doorKind,
+		targetGrid: grid1,
+		targetX:    0,
+		targetY:    0,
+	}
+
+	p := tea.NewProgram(model{x: 0, y: 0, grid: grid1})
 
 	if _, pErr := p.Run(); pErr != nil {
 		log.Panic(pErr)
