@@ -175,3 +175,96 @@ func Test_Door_Teleport(t *testing.T) {
 		t.Errorf("expected grid to be grid2")
 	}
 }
+
+func Test_Sound_Triggers(t *testing.T) {
+	grid := [][]tile{
+		{empty, water},
+		{empty, empty},
+	}
+	// Note: water has sound: "splash"
+
+	m := model{
+		x:    0,
+		y:    0,
+		grid: grid,
+	}
+
+	// Move right onto water
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
+	newModel, cmd := m.Update(msg)
+	res := newModel.(model)
+
+	if res.x != 1 || res.y != 0 {
+		t.Errorf("expected movement to (1,0), got (%d,%d)", res.x, res.y)
+	}
+
+	if cmd == nil {
+		t.Fatal("expected a command for sound")
+	}
+
+	// In tests, speaker might not be initialized, but we can still check the message
+	// returned by the command.
+	soundM := cmd()
+	if sm, ok := soundM.(soundMsg); ok {
+		if string(sm) != "splash" {
+			t.Errorf("expected sound 'splash', got '%s'", string(sm))
+		}
+	} else {
+		t.Errorf("expected command to return soundMsg, got %T", soundM)
+	}
+
+	// Verify that soundMsg updates the model
+	m2, cmd2 := res.Update(soundM)
+	res2 := m2.(model)
+	if res2.sound != "splash" {
+		t.Errorf("expected model.sound to be 'splash', got '%s'", res2.sound)
+	}
+	if cmd2 != nil {
+		t.Error("expected nil command after soundMsg")
+	}
+
+	// Verify that another key press clears the sound
+	m3, _ := res2.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")})
+	res3 := m3.(model)
+	if res3.sound != "" {
+		t.Error("expected model.sound to be cleared after move")
+	}
+}
+
+func Test_Door_Sound(t *testing.T) {
+	grid2 := [][]tile{{empty}}
+	grid1 := [][]tile{
+		{empty, {kind: doorKind, targetGrid: grid2, targetX: 0, targetY: 0, sound: "creak"}},
+	}
+
+	m := model{
+		x:    0,
+		y:    0,
+		grid: grid1,
+	}
+
+	// Move right onto door
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
+	newModel, cmd := m.Update(msg)
+	res := newModel.(model)
+
+	if res.x != 0 || res.y != 0 {
+		t.Errorf("expected teleport to (0,0), got (%d,%d)", res.x, res.y)
+	}
+	if len(res.grid) != len(grid2) || len(res.grid[0]) != len(grid2[0]) {
+		t.Error("expected grid to be grid2")
+	}
+
+	if cmd == nil {
+		t.Fatal("expected a command for door sound")
+	}
+
+	soundM := cmd()
+	if sm, ok := soundM.(soundMsg); ok {
+		if string(sm) != "creak" {
+			t.Errorf("expected sound 'creak', got '%s'", string(sm))
+		}
+	} else {
+		t.Errorf("expected command to return soundMsg, got %T", soundM)
+	}
+}

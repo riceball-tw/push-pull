@@ -2,9 +2,14 @@ package main
 
 import (
 	"log"
+	"math"
+	"math/rand"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/speaker"
 )
 
 type tileKind int
@@ -13,6 +18,7 @@ const (
 	emptyKind tileKind = iota
 	wallKind
 	doorKind
+	waterKind
 )
 
 type tile struct {
@@ -20,11 +26,13 @@ type tile struct {
 	targetGrid [][]tile
 	targetX    int
 	targetY    int
+	sound      string
 }
 
 var (
 	empty = tile{kind: emptyKind}
 	wall  = tile{kind: wallKind}
+	water = tile{kind: waterKind, sound: "splash"}
 )
 
 type tileInfo struct {
@@ -51,6 +59,12 @@ var tiles = map[tileKind]tileInfo{
 			Background(lipgloss.Color("#553311")),
 		char: "門",
 	},
+	waterKind: {
+		style: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#fff")).
+			Background(lipgloss.Color("#0077be")),
+		char: "水",
+	},
 }
 
 var playerStyle = lipgloss.NewStyle().
@@ -58,8 +72,73 @@ var playerStyle = lipgloss.NewStyle().
 	Background(lipgloss.Color("#7D54F2"))
 
 type model struct {
-	x, y int
-	grid [][]tile
+	x, y  int
+	grid  [][]tile
+	sound string
+}
+
+type soundMsg string
+
+func playProceduralSound(sound string) {
+	sr := beep.SampleRate(44100)
+	var streamer beep.Streamer
+
+	switch sound {
+	case "creak":
+		// A low frequency square wave with some decay
+		freq := 100.0
+		duration := time.Millisecond * 300
+		numSamples := int(sr.N(duration))
+		i := 0
+		streamer = beep.StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
+			for j := range samples {
+				if i >= numSamples {
+					return j, false
+				}
+				// Square wave
+				val := 0.1
+				if math.Sin(2*math.Pi*freq*float64(i)/float64(sr)) < 0 {
+					val = -0.1
+				}
+				// Decay
+				decay := 1.0 - float64(i)/float64(numSamples)
+				samples[j][0] = val * decay
+				samples[j][1] = val * decay
+				i++
+			}
+			return len(samples), true
+		})
+	case "splash":
+		// White noise with decay
+		duration := time.Millisecond * 400
+		numSamples := int(sr.N(duration))
+		i := 0
+		streamer = beep.StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
+			for j := range samples {
+				if i >= numSamples {
+					return j, false
+				}
+				val := (rand.Float64()*2 - 1) * 0.1
+				// Decay
+				decay := 1.0 - float64(i)/float64(numSamples)
+				samples[j][0] = val * decay
+				samples[j][1] = val * decay
+				i++
+			}
+			return len(samples), true
+		})
+	default:
+		return
+	}
+
+	speaker.Play(streamer)
+}
+
+func playSound(sound string) tea.Cmd {
+	return func() tea.Msg {
+		playProceduralSound(sound)
+		return soundMsg(sound)
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -87,6 +166,10 @@ func (m model) View() string {
 		s += line + "\n"
 	}
 
+	if m.sound != "" {
+		s += "\n* Playing sound: " + m.sound + " *"
+	}
+
 	s += "\n(use h, j, k, l to move, q to quit)"
 	return s
 }
@@ -98,26 +181,43 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	width := len(m.grid[0])
 
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case soundMsg:
+		m.sound = string(msg)
+		return m, nil
 	case tea.KeyMsg:
+		m.sound = ""
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "h": // left
 			if m.x > 0 && m.grid[m.y][m.x-1].kind != wallKind {
 				m.x--
+				if m.grid[m.y][m.x].sound != "" {
+					cmd = playSound(m.grid[m.y][m.x].sound)
+				}
 			}
 		case "j": // down
 			if m.y < height-1 && m.grid[m.y+1][m.x].kind != wallKind {
 				m.y++
+				if m.grid[m.y][m.x].sound != "" {
+					cmd = playSound(m.grid[m.y][m.x].sound)
+				}
 			}
 		case "k": // up
 			if m.y > 0 && m.grid[m.y-1][m.x].kind != wallKind {
 				m.y--
+				if m.grid[m.y][m.x].sound != "" {
+					cmd = playSound(m.grid[m.y][m.x].sound)
+				}
 			}
 		case "l": // right
 			if m.x < width-1 && m.grid[m.y][m.x+1].kind != wallKind {
 				m.x++
+				if m.grid[m.y][m.x].sound != "" {
+					cmd = playSound(m.grid[m.y][m.x].sound)
+				}
 			}
 		}
 	}
@@ -128,9 +228,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.grid = door.targetGrid
 		m.x = door.targetX
 		m.y = door.targetY
+		if m.grid[m.y][m.x].sound != "" {
+			cmd = playSound(m.grid[m.y][m.x].sound)
+		}
 	}
 
-	return m, nil
+	return m, cmd
 }
 
 func main() {
@@ -145,8 +248,8 @@ func main() {
 	grid1 := [][]tile{
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, wall, wall, wall, empty, empty, empty, empty, empty},
-		{empty, empty, wall, empty, empty, empty, empty, empty, empty, empty},
-		{empty, empty, wall, empty, empty, empty, empty, empty, empty, empty},
+		{empty, water, wall, empty, empty, empty, empty, empty, empty, empty},
+		{empty, water, wall, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 	}
@@ -157,6 +260,7 @@ func main() {
 		targetGrid: grid2,
 		targetX:    2,
 		targetY:    2,
+		sound:      "creak",
 	}
 
 	// Add a door from grid2 to grid1
@@ -165,9 +269,16 @@ func main() {
 		targetGrid: grid1,
 		targetX:    0,
 		targetY:    0,
+		sound:      "creak",
 	}
 
 	p := tea.NewProgram(model{x: 0, y: 0, grid: grid1})
+
+	sr := beep.SampleRate(44100)
+	err := speaker.Init(sr, sr.N(time.Second/10))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if _, pErr := p.Run(); pErr != nil {
 		log.Panic(pErr)
