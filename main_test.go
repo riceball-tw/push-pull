@@ -7,7 +7,7 @@ import (
 )
 
 func Test_Character_Movement(t *testing.T) {
-	grid := [][]tile{
+	grid := [][]Tile{
 		{empty, empty, empty},
 		{empty, wall,  empty},
 		{empty, empty, empty},
@@ -70,7 +70,7 @@ func Test_Character_Movement(t *testing.T) {
 }
 
 func Test_Individual_Character_Movement(t *testing.T) {
-	grid := [][]tile{
+	grid := [][]Tile{
 		{empty, empty, empty},
 		{empty, wall,  empty},
 		{empty, empty, empty},
@@ -116,7 +116,7 @@ func Test_Individual_Character_Movement(t *testing.T) {
 }
 
 func Test_Quit(t *testing.T) {
-	m := model{x: 0, y: 0, grid: [][]tile{{empty}}}
+	m := model{x: 0, y: 0, grid: [][]Tile{{empty}}}
 	
 	// Test 'q'
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
@@ -134,20 +134,20 @@ func Test_Quit(t *testing.T) {
 }
 
 func Test_Door_Teleport(t *testing.T) {
-	grid2 := [][]tile{
+	grid2 := [][]Tile{
 		{empty, empty, empty},
 		{empty, empty, empty},
 		{empty, empty, empty},
 	}
-	grid1 := [][]tile{
+	grid1 := [][]Tile{
 		{empty, empty, empty},
 		{empty, empty, empty},
 		{empty, empty, empty},
 	}
 
 	// Place a door in grid1 at (1,1) leading to grid2 at (2,2)
-	grid1[1][1] = tile{
-		kind:       doorKind,
+	grid1[1][1] = doorTile{
+		baseTile:   baseTile{kind: doorKind},
 		targetGrid: grid2,
 		targetX:    2,
 		targetY:    2,
@@ -171,13 +171,13 @@ func Test_Door_Teleport(t *testing.T) {
 	// Verify grid changed (grid2 should have different pointer/identity if we want to be strict,
 	// but here we check if a tile change in grid2 is reflected in res.grid)
 	grid2[0][0] = wall
-	if res.grid[0][0].kind != wallKind {
+	if res.grid[0][0].Kind() != wallKind {
 		t.Errorf("expected grid to be grid2")
 	}
 }
 
 func Test_Sound_Triggers(t *testing.T) {
-	grid := [][]tile{
+	grid := [][]Tile{
 		{empty, water},
 		{empty, empty},
 	}
@@ -232,9 +232,9 @@ func Test_Sound_Triggers(t *testing.T) {
 }
 
 func Test_Door_Sound(t *testing.T) {
-	grid2 := [][]tile{{empty}}
-	grid1 := [][]tile{
-		{empty, {kind: doorKind, targetGrid: grid2, targetX: 0, targetY: 0, sound: "creak"}},
+	grid2 := [][]Tile{{empty}}
+	grid1 := [][]Tile{
+		{empty, doorTile{baseTile: baseTile{kind: doorKind, sound: "creak"}, targetGrid: grid2, targetX: 0, targetY: 0}},
 	}
 
 	m := model{
@@ -273,7 +273,7 @@ func Test_Door_Sound(t *testing.T) {
 func Test_Push_Box(t *testing.T) {
 	tests := []struct {
 		name      string
-		grid      [][]tile
+		grid      [][]Tile
 		startX    int
 		startY    int
 		key       string
@@ -287,7 +287,7 @@ func Test_Push_Box(t *testing.T) {
 	}{
 		{
 			name: "push box right into empty space",
-			grid: [][]tile{
+			grid: [][]Tile{
 				{empty, box, empty, empty},
 			},
 			startX:    0,
@@ -303,7 +303,7 @@ func Test_Push_Box(t *testing.T) {
 		},
 		{
 			name: "push box right into wall",
-			grid: [][]tile{
+			grid: [][]Tile{
 				{empty, box, wall},
 			},
 			startX:    0,
@@ -319,7 +319,7 @@ func Test_Push_Box(t *testing.T) {
 		},
 		{
 			name: "push box right into another box",
-			grid: [][]tile{
+			grid: [][]Tile{
 				{empty, box, box, empty},
 			},
 			startX:    0,
@@ -335,7 +335,7 @@ func Test_Push_Box(t *testing.T) {
 		},
 		{
 			name: "push box right into boundary",
-			grid: [][]tile{
+			grid: [][]Tile{
 				{empty, box},
 			},
 			startX:    0,
@@ -351,7 +351,7 @@ func Test_Push_Box(t *testing.T) {
 		},
 		{
 			name: "push box down into empty space",
-			grid: [][]tile{
+			grid: [][]Tile{
 				{empty},
 				{box},
 				{empty},
@@ -372,9 +372,9 @@ func Test_Push_Box(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Deep copy grid to avoid side effects between tests
-			gridCopy := make([][]tile, len(tt.grid))
+			gridCopy := make([][]Tile, len(tt.grid))
 			for i := range tt.grid {
-				gridCopy[i] = make([]tile, len(tt.grid[i]))
+				gridCopy[i] = make([]Tile, len(tt.grid[i]))
 				copy(gridCopy[i], tt.grid[i])
 			}
 
@@ -389,14 +389,14 @@ func Test_Push_Box(t *testing.T) {
 
 			// Check box final position
 			if tt.canMove {
-				if res.grid[tt.boxStartY][tt.boxStartX].kind == boxKind {
+				if res.grid[tt.boxStartY][tt.boxStartX].Kind() == boxKind {
 					t.Errorf("%s: box still at original position (%d,%d)", tt.name, tt.boxStartX, tt.boxStartY)
 				}
-				if res.grid[tt.boxEndY][tt.boxEndX].kind != boxKind {
+				if res.grid[tt.boxEndY][tt.boxEndX].Kind() != boxKind {
 					t.Errorf("%s: box NOT at target position (%d,%d)", tt.name, tt.boxEndX, tt.boxEndY)
 				}
 			} else {
-				if res.grid[tt.boxStartY][tt.boxStartX].kind != boxKind {
+				if res.grid[tt.boxStartY][tt.boxStartX].Kind() != boxKind {
 					t.Errorf("%s: box moved from (%d,%d) but it shouldn't have", tt.name, tt.boxStartX, tt.boxStartY)
 				}
 			}

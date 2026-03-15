@@ -11,7 +11,7 @@ import (
 
 type model struct {
 	x, y  int
-	grid  [][]tile
+	grid  [][]Tile
 	sound string
 }
 
@@ -33,7 +33,7 @@ func (m model) View() string {
 			if x == m.x && y == m.y {
 				line += playerStyle.Render("我")
 			} else {
-				info := tiles[m.grid[y][x].kind]
+				info := tiles[m.grid[y][x].Kind()]
 				line += info.style.Render(info.char)
 			}
 		}
@@ -92,7 +92,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	grid2 := [][]tile{
+	grid2 := [][]Tile{
 		{wall, wall, wall, wall, wall},
 		{wall, empty, empty, empty, wall},
 		{wall, empty, wall, empty, wall},
@@ -100,7 +100,7 @@ func main() {
 		{wall, wall, wall, wall, wall},
 	}
 
-	grid1 := [][]tile{
+	grid1 := [][]Tile{
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, wall, wall, wall, empty, empty, empty, empty, empty},
 		{empty, water, wall, empty, empty, empty, empty, empty, empty, empty},
@@ -110,21 +110,19 @@ func main() {
 	}
 
 	// Add a door from grid1 to grid2
-	grid1[0][5] = tile{
-		kind:       doorKind,
+	grid1[0][5] = doorTile{
+		baseTile:   baseTile{kind: doorKind, sound: "creak"},
 		targetGrid: grid2,
 		targetX:    2,
 		targetY:    2,
-		sound:      "creak",
 	}
 
 	// Add a door from grid2 to grid1
-	grid2[1][1] = tile{
-		kind:       doorKind,
+	grid2[1][1] = doorTile{
+		baseTile:   baseTile{kind: doorKind, sound: "creak"},
 		targetGrid: grid1,
 		targetX:    0,
 		targetY:    0,
-		sound:      "creak",
 	}
 
 	p := tea.NewProgram(model{x: 0, y: 0, grid: grid1})

@@ -19,52 +19,86 @@ type MoveResult struct {
 	Sound   string
 }
 
-type tile struct {
-	kind       tileKind
-	targetGrid [][]tile
-	targetX    int
-	targetY    int
-	sound      string
+type Tile interface {
+	Kind() tileKind
+	MoveInto(m *model, nx, ny, dx, dy int) MoveResult
 }
 
-func (t tile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+type baseTile struct {
+	kind  tileKind
+	sound string
+}
+
+func (t baseTile) Kind() tileKind {
+	return t.kind
+}
+
+type emptyTile struct {
+	baseTile
+}
+
+func (t emptyTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+	m.x, m.y = nx, ny
+	return MoveResult{CanMove: true, Sound: t.sound}
+}
+
+type wallTile struct {
+	baseTile
+}
+
+func (t wallTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+	return MoveResult{CanMove: false}
+}
+
+type waterTile struct {
+	baseTile
+}
+
+func (t waterTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+	m.x, m.y = nx, ny
+	return MoveResult{CanMove: true, Sound: t.sound}
+}
+
+type doorTile struct {
+	baseTile
+	targetGrid [][]Tile
+	targetX    int
+	targetY    int
+}
+
+func (t doorTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+	m.grid = t.targetGrid
+	m.x = t.targetX
+	m.y = t.targetY
+	return MoveResult{CanMove: true, Sound: t.sound}
+}
+
+type boxTile struct {
+	baseTile
+}
+
+func (t boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 	height := len(m.grid)
 	width := len(m.grid[0])
-
-	switch t.kind {
-	case emptyKind, waterKind:
-		m.x, m.y = nx, ny
-		return MoveResult{CanMove: true, Sound: t.sound}
-	case doorKind:
-		m.grid = t.targetGrid
-		m.x = t.targetX
-		m.y = t.targetY
-		return MoveResult{CanMove: true, Sound: t.sound}
-	case boxKind:
-		nnx, nny := nx+dx, ny+dy
-		if nnx >= 0 && nnx < width && nny >= 0 && nny < height {
-			behindBoxTile := m.grid[nny][nnx]
-			if behindBoxTile.kind == emptyKind {
-				// Push the box
-				m.grid[nny][nnx] = m.grid[ny][nx]
-				m.grid[ny][nx] = empty
-				m.x, m.y = nx, ny
-				return MoveResult{CanMove: true, Sound: t.sound}
-			}
+	nnx, nny := nx+dx, ny+dy
+	if nnx >= 0 && nnx < width && nny >= 0 && nny < height {
+		behindBoxTile := m.grid[nny][nnx]
+		if behindBoxTile.Kind() == emptyKind {
+			// Push the box
+			m.grid[nny][nnx] = m.grid[ny][nx]
+			m.grid[ny][nx] = empty
+			m.x, m.y = nx, ny
+			return MoveResult{CanMove: true, Sound: t.sound}
 		}
-		return MoveResult{CanMove: false}
-	case wallKind:
-		return MoveResult{CanMove: false}
-	default:
-		return MoveResult{CanMove: false}
 	}
+	return MoveResult{CanMove: false}
 }
 
 var (
-	empty = tile{kind: emptyKind, sound: "walk"}
-	wall  = tile{kind: wallKind}
-	water = tile{kind: waterKind, sound: "splash"}
-	box   = tile{kind: boxKind, sound: "push"}
+	empty = emptyTile{baseTile{kind: emptyKind, sound: "walk"}}
+	wall  = wallTile{baseTile{kind: wallKind}}
+	water = waterTile{baseTile{kind: waterKind, sound: "splash"}}
+	box   = boxTile{baseTile{kind: boxKind, sound: "push"}}
 )
 
 type tileInfo struct {
