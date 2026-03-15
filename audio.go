@@ -81,6 +81,38 @@ func playProceduralSound(sound string) {
 			}
 			return len(samples), true
 		})
+	case "push":
+		// A longer wooden scraping sound with some resonance
+		duration := time.Millisecond * 500
+		numSamples := int(sr.N(duration))
+		i := 0
+		// Base resonance frequency (simulating wooden box's hollow body)
+		baseFreq := 150.0
+		// Adding some irregular noise and scraping pulses
+		streamer = beep.StreamerFunc(func(samples [][2]float64) (n int, ok bool) {
+			for j := range samples {
+				if i >= numSamples {
+					return j, false
+				}
+				// Time normalized to 0-1
+				t := float64(i) / float64(numSamples)
+				// Decay
+				decay := 1.0 - t
+				// Base wooden resonance (sine wave with slight frequency shift)
+				resonance := math.Sin(2*math.Pi*(baseFreq+5*math.Sin(2*math.Pi*10.0*t))*float64(i)/float64(sr)) * 0.08
+				// Scraping noise (higher frequency noise pulses)
+				scraping := (rand.Float64()*2 - 1) * 0.05
+				// Modulate scraping to create a "grainy" texture
+				if math.Sin(2*math.Pi*200.0*t) < 0.5 {
+					scraping *= 0.2
+				}
+				val := (resonance + scraping) * decay
+				samples[j][0] = val
+				samples[j][1] = val
+				i++
+			}
+			return len(samples), true
+		})
 	default:
 		return
 	}

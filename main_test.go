@@ -380,11 +380,26 @@ func Test_Push_Box(t *testing.T) {
 
 			m := model{x: tt.startX, y: tt.startY, grid: gridCopy}
 			msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(tt.key)}
-			newModel, _ := m.Update(msg)
+			newModel, cmd := m.Update(msg)
 			res := newModel.(model)
 
 			if res.x != tt.wantX || res.y != tt.wantY {
 				t.Errorf("%s: player moved to (%d,%d), want (%d,%d)", tt.name, res.x, res.y, tt.wantX, tt.wantY)
+			}
+
+			if tt.canMove {
+				if cmd == nil {
+					t.Errorf("%s: expected a command for sound", tt.name)
+				} else {
+					soundM := cmd()
+					if sm, ok := soundM.(soundMsg); ok {
+						if string(sm) != "push" {
+							t.Errorf("%s: expected sound 'push', got '%s'", tt.name, string(sm))
+						}
+					} else {
+						t.Errorf("%s: expected command to return soundMsg, got %T", tt.name, soundM)
+					}
+				}
 			}
 
 			// Check box final position
