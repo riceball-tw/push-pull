@@ -13,28 +13,37 @@ Background(lipgloss.Color("#7D54F2"))
 
 
 type model struct {
-	x int
-	y int
+	x, y  int
+	grid [][]bool
 }
+
+const (
+	width  = 20
+	height = 10
+)
 
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
 func (m model) View() string {
-	// Simple rendering of the character "@" at (x, y)
-	// We'll use newlines for Y and spaces for X
 	var s string
-	for i := 0; i < m.y; i++ {
-		s += "\n"
+
+	for y := 0; y < height; y++ {
+		line := ""
+		for x := 0; x < width; x++ {
+			if x == m.x && y == m.y {
+				line += baseStyle.Render("我")
+			} else if m.grid[y][x] {
+				line += "牆"
+			} else {
+				line += "　"
+			}
+		}
+		s += line + "\n"
 	}
-	spaces := ""
-	for i := 0; i < m.x; i++ {
-		spaces += " "
-	}
-	s += spaces
-	s += baseStyle.Render("@")
-	s += "\n\n(use h, j, k, l to move, ctrl+c to quit)"
+
+	s += "\n(use h, j, k, l to move, X is a wall, ctrl+c to quit)"
 	return s
 }
 
@@ -45,17 +54,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "h": // left
-			if m.x > 0 {
+			if m.x > 0 && !m.grid[m.y][m.x-1] {
 				m.x--
 			}
 		case "j": // down
-			m.y++
+			if m.y < height-1 && !m.grid[m.y+1][m.x] {
+				m.y++
+			}
 		case "k": // up
-			if m.y > 0 {
+			if m.y > 0 && !m.grid[m.y-1][m.x] {
 				m.y--
 			}
 		case "l": // right
-			m.x++
+			if m.x < width-1 && !m.grid[m.y][m.x+1] {
+				m.x++
+			}
 		}
 	}
 
@@ -63,7 +76,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	p := tea.NewProgram(model{x: 0, y: 0})
+	grid := make([][]bool, height)
+	for i := range grid {
+		grid[i] = make([]bool, width)
+	}
+
+	// Add some walls
+	grid[5][5] = true
+	grid[5][6] = true
+	grid[5][7] = true
+	grid[4][5] = true
+	grid[6][5] = true
+
+	p := tea.NewProgram(model{x: 0, y: 0, grid: grid})
 
 	if _, pErr := p.Run(); pErr != nil {
 		log.Panic(pErr)
