@@ -115,6 +115,15 @@ func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 			m.grid[ny][nx] = empty
 			m.x, m.y = nx, ny
 			return MoveResult{CanMove: true, Sound: t.sound}
+		} else if behindBoxTile.Kind() == boxKind {
+			// Merge the box
+			t.count++
+			if targetBox, ok := behindBoxTile.(*boxTile); ok {
+				targetBox.count += t.count
+				m.grid[ny][nx] = empty
+				m.x, m.y = nx, ny
+				return MoveResult{CanMove: true, Sound: t.sound}
+			}
 		}
 	}
 	return MoveResult{CanMove: false}

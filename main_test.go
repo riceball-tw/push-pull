@@ -329,13 +329,13 @@ func Test_Push_Box(t *testing.T) {
 			startX:    0,
 			startY:    0,
 			key:       "l",
-			wantX:     0,
+			wantX:     1,
 			wantY:     0,
 			boxStartX: 1,
 			boxStartY: 0,
-			boxEndX:   1, // should not move
+			boxEndX:   2,
 			boxEndY:   0,
-			canMove:   false,
+			canMove:   true,
 		},
 		{
 			name: "push box right into boundary",
