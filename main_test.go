@@ -268,3 +268,138 @@ func Test_Door_Sound(t *testing.T) {
 		t.Errorf("expected command to return soundMsg, got %T", soundM)
 	}
 }
+
+
+func Test_Push_Box(t *testing.T) {
+	tests := []struct {
+		name      string
+		grid      [][]tile
+		startX    int
+		startY    int
+		key       string
+		wantX     int
+		wantY     int
+		boxStartX int
+		boxStartY int
+		boxEndX   int
+		boxEndY   int
+		canMove   bool
+	}{
+		{
+			name: "push box right into empty space",
+			grid: [][]tile{
+				{empty, box, empty, empty},
+			},
+			startX:    0,
+			startY:    0,
+			key:       "l",
+			wantX:     1,
+			wantY:     0,
+			boxStartX: 1,
+			boxStartY: 0,
+			boxEndX:   2,
+			boxEndY:   0,
+			canMove:   true,
+		},
+		{
+			name: "push box right into wall",
+			grid: [][]tile{
+				{empty, box, wall},
+			},
+			startX:    0,
+			startY:    0,
+			key:       "l",
+			wantX:     0,
+			wantY:     0,
+			boxStartX: 1,
+			boxStartY: 0,
+			boxEndX:   1, // should not move
+			boxEndY:   0,
+			canMove:   false,
+		},
+		{
+			name: "push box right into another box",
+			grid: [][]tile{
+				{empty, box, box, empty},
+			},
+			startX:    0,
+			startY:    0,
+			key:       "l",
+			wantX:     0,
+			wantY:     0,
+			boxStartX: 1,
+			boxStartY: 0,
+			boxEndX:   1, // should not move
+			boxEndY:   0,
+			canMove:   false,
+		},
+		{
+			name: "push box right into boundary",
+			grid: [][]tile{
+				{empty, box},
+			},
+			startX:    0,
+			startY:    0,
+			key:       "l",
+			wantX:     0,
+			wantY:     0,
+			boxStartX: 1,
+			boxStartY: 0,
+			boxEndX:   1, // should not move
+			boxEndY:   0,
+			canMove:   false,
+		},
+		{
+			name: "push box down into empty space",
+			grid: [][]tile{
+				{empty},
+				{box},
+				{empty},
+			},
+			startX:    0,
+			startY:    0,
+			key:       "j",
+			wantX:     0,
+			wantY:     1,
+			boxStartX: 0,
+			boxStartY: 1,
+			boxEndX:   0,
+			boxEndY:   2,
+			canMove:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Deep copy grid to avoid side effects between tests
+			gridCopy := make([][]tile, len(tt.grid))
+			for i := range tt.grid {
+				gridCopy[i] = make([]tile, len(tt.grid[i]))
+				copy(gridCopy[i], tt.grid[i])
+			}
+
+			m := model{x: tt.startX, y: tt.startY, grid: gridCopy}
+			msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(tt.key)}
+			newModel, _ := m.Update(msg)
+			res := newModel.(model)
+
+			if res.x != tt.wantX || res.y != tt.wantY {
+				t.Errorf("%s: player moved to (%d,%d), want (%d,%d)", tt.name, res.x, res.y, tt.wantX, tt.wantY)
+			}
+
+			// Check box final position
+			if tt.canMove {
+				if res.grid[tt.boxStartY][tt.boxStartX].kind == boxKind {
+					t.Errorf("%s: box still at original position (%d,%d)", tt.name, tt.boxStartX, tt.boxStartY)
+				}
+				if res.grid[tt.boxEndY][tt.boxEndX].kind != boxKind {
+					t.Errorf("%s: box NOT at target position (%d,%d)", tt.name, tt.boxEndX, tt.boxEndY)
+				}
+			} else {
+				if res.grid[tt.boxStartY][tt.boxStartX].kind != boxKind {
+					t.Errorf("%s: box moved from (%d,%d) but it shouldn't have", tt.name, tt.boxStartX, tt.boxStartY)
+				}
+			}
+		})
+	}
+}
