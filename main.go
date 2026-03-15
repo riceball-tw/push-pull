@@ -17,6 +17,7 @@ const (
 	wallKind
 	doorKind
 	waterKind
+	boxKind
 )
 
 type tile struct {
@@ -31,6 +32,7 @@ var (
 	empty = tile{kind: emptyKind, sound: "walk"}
 	wall  = tile{kind: wallKind}
 	water = tile{kind: waterKind, sound: "splash"}
+	box   = tile{kind: boxKind, sound: "push"}
 )
 
 type tileInfo struct {
@@ -62,6 +64,12 @@ var tiles = map[tileKind]tileInfo{
 			Foreground(lipgloss.Color("#fff")).
 			Background(lipgloss.Color("#0077be")),
 		char: "水",
+	},
+	boxKind: {
+		style: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#fff")).
+			Background(lipgloss.Color("#B87333")),
+		char: "箱",
 	},
 }
 
@@ -122,35 +130,43 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyMsg:
 		m.sound = ""
+		dx, dy := 0, 0
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "h": // left
-			if m.x > 0 && m.grid[m.y][m.x-1].kind != wallKind {
-				m.x--
-				if m.grid[m.y][m.x].sound != "" {
-					cmd = playSound(m.grid[m.y][m.x].sound)
-				}
-			}
+			dx = -1
 		case "j": // down
-			if m.y < height-1 && m.grid[m.y+1][m.x].kind != wallKind {
-				m.y++
-				if m.grid[m.y][m.x].sound != "" {
-					cmd = playSound(m.grid[m.y][m.x].sound)
-				}
-			}
+			dy = 1
 		case "k": // up
-			if m.y > 0 && m.grid[m.y-1][m.x].kind != wallKind {
-				m.y--
-				if m.grid[m.y][m.x].sound != "" {
-					cmd = playSound(m.grid[m.y][m.x].sound)
-				}
-			}
+			dy = -1
 		case "l": // right
-			if m.x < width-1 && m.grid[m.y][m.x+1].kind != wallKind {
-				m.x++
-				if m.grid[m.y][m.x].sound != "" {
-					cmd = playSound(m.grid[m.y][m.x].sound)
+			dx = 1
+		}
+
+		if dx != 0 || dy != 0 {
+			nx, ny := m.x+dx, m.y+dy
+			if nx >= 0 && nx < width && ny >= 0 && ny < height {
+				targetTile := m.grid[ny][nx]
+				if targetTile.kind == emptyKind || targetTile.kind == doorKind || targetTile.kind == waterKind {
+					m.x, m.y = nx, ny
+					if targetTile.sound != "" {
+						cmd = playSound(targetTile.sound)
+					}
+				} else if targetTile.kind == boxKind {
+					nnx, nny := nx+dx, ny+dy
+					if nnx >= 0 && nnx < width && nny >= 0 && nny < height {
+						behindBoxTile := m.grid[nny][nnx]
+						if behindBoxTile.kind == emptyKind {
+							// Push the box
+							m.grid[nny][nnx] = m.grid[ny][nx]
+							m.grid[ny][nx] = empty
+							m.x, m.y = nx, ny
+							if targetTile.sound != "" {
+								cmd = playSound(targetTile.sound)
+							}
+						}
+					}
 				}
 			}
 		}
@@ -183,7 +199,7 @@ func main() {
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, wall, wall, wall, empty, empty, empty, empty, empty},
 		{empty, water, wall, empty, empty, empty, empty, empty, empty, empty},
-		{empty, water, wall, empty, empty, empty, empty, empty, empty, empty},
+		{empty, water, wall, box, empty, empty, empty, box, empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 		{empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
 	}
