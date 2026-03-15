@@ -11,6 +11,11 @@ var baseStyle = lipgloss.NewStyle().
 Foreground(lipgloss.Color("#fff")).
 Background(lipgloss.Color("#7D54F2"))
 
+var backgroundStyle = lipgloss.NewStyle().
+Foreground(lipgloss.Color("#fff")).
+Background(lipgloss.Color("#333")) 
+
+
 type tile int
 
 const (
@@ -43,7 +48,7 @@ func (m model) View() string {
 			} else if m.grid[y][x] == wall {
 				line += "牆"
 			} else {
-				line += "　"
+				line += backgroundStyle.Render("　")
 			}
 		}
 		s += line + "\n"
