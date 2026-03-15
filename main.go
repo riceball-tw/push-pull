@@ -135,8 +135,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func NewModel(l Level) model {
+	return model{
+		x:    l.StartX,
+		y:    l.StartY,
+		grid: l.Grid,
+	}
+}
+
 func main() {
-	p := tea.NewProgram(model{x: 0, y: 0, grid: level})
+	p := tea.NewProgram(NewModel(level1))
 
 	sr := beep.SampleRate(44100)
 	err := speaker.Init(sr, sr.N(time.Second/10))

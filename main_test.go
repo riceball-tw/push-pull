@@ -10,6 +10,29 @@ var (
 	box = newBox()
 )
 
+func Test_Level_Initialization(t *testing.T) {
+	l := Level{
+		StartX: 5,
+		StartY: 10,
+		Grid: [][]Tile{
+			{empty, wall},
+			{empty, empty},
+		},
+	}
+
+	m := NewModel(l)
+
+	if m.x != l.StartX {
+		t.Errorf("expected model x to be %d, got %d", l.StartX, m.x)
+	}
+	if m.y != l.StartY {
+		t.Errorf("expected model y to be %d, got %d", l.StartY, m.y)
+	}
+	if len(m.grid) != len(l.Grid) {
+		t.Errorf("expected grid height to be %d, got %d", len(l.Grid), len(m.grid))
+	}
+}
+
 func Test_Character_Movement(t *testing.T) {
 	grid := [][]Tile{
 		{empty, empty, empty},
