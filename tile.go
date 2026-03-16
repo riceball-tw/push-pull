@@ -82,15 +82,15 @@ func (t waterTile) Clone() Tile {
 
 type doorTile struct {
 	baseTile
-	targetGrid [][]Tile
-	targetX    int
-	targetY    int
+	targetLevel Level
 }
 
 func (t doorTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
-	m.grid = t.targetGrid
-	m.x = t.targetX
-	m.y = t.targetY
+	m.grid = t.targetLevel.Grid
+	m.x = t.targetLevel.StartX
+	m.y = t.targetLevel.StartY
+	m.title = t.targetLevel.Title
+	m.description = t.targetLevel.Description
 	return MoveResult{CanMove: true, Sound: t.sound}
 }
 
@@ -198,12 +198,10 @@ func newLock(requiredCount int, targetDoor Tile) *lockTile {
 	}
 }
 
-func newDoor(targetGrid [][]Tile, targetX, targetY int) *doorTile {
+func newDoor(targetLevel Level) *doorTile {
 	return &doorTile{
-		baseTile:   baseTile{kind: doorKind, sound: "door"},
-		targetGrid: targetGrid,
-		targetX:    targetX,
-		targetY:    targetY,
+		baseTile:    baseTile{kind: doorKind, sound: "door"},
+		targetLevel: targetLevel,
 	}
 }
 

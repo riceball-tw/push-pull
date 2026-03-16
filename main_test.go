@@ -172,12 +172,10 @@ func Test_Door_Teleport(t *testing.T) {
 		{empty, empty, empty},
 	}
 
-	// Place a door in grid1 at (1,1) leading to grid2 at (2,2)
+	// Place a door in grid1 at (1,1) leading to grid2
 	grid1[1][1] = doorTile{
-		baseTile:   baseTile{kind: doorKind},
-		targetGrid: grid2,
-		targetX:    2,
-		targetY:    2,
+		baseTile:    baseTile{kind: doorKind},
+		targetLevel: Level{Grid: grid2, StartX: 2, StartY: 2},
 	}
 
 	m := model{
@@ -261,7 +259,7 @@ func Test_Sound_Triggers(t *testing.T) {
 func Test_Door_Sound(t *testing.T) {
 	grid2 := [][]Tile{{empty}}
 	grid1 := [][]Tile{
-		{empty, doorTile{baseTile: baseTile{kind: doorKind, sound: "creak"}, targetGrid: grid2, targetX: 0, targetY: 0}},
+		{empty, doorTile{baseTile: baseTile{kind: doorKind, sound: "creak"}, targetLevel: Level{Grid: grid2, StartX: 0, StartY: 0}}},
 	}
 
 	m := model{
