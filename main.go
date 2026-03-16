@@ -6,21 +6,26 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/gopxl/beep/v2"
 	"github.com/gopxl/beep/v2/speaker"
 )
 
 type model struct {
-	x, y    int
-	grid    [][]Tile
-	sound   string
-	moves   int
-	history []state
+	x, y        int
+	grid        [][]Tile
+	sound       string
+	moves       int
+	history     []state
+	title       string
+	description string
 }
 
 type state struct {
-	x, y int
-	grid [][]Tile
+	x, y        int
+	grid        [][]Tile
+	title       string
+	description string
 }
 
 func (m model) snapshot() state {
@@ -32,9 +37,11 @@ func (m model) snapshot() state {
 		}
 	}
 	return state{
-		x:    m.x,
-		y:    m.y,
-		grid: newGrid,
+		x:           m.x,
+		y:           m.y,
+		grid:        newGrid,
+		title:       m.title,
+		description: m.description,
 	}
 }
 
@@ -44,6 +51,9 @@ func (m model) Init() tea.Cmd {
 
 func (m model) View() string {
 	var s string
+	s += lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#7D54F2")).Padding(0, 1).Render(m.title) + "\n"
+	s += lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("#EEE")).Render(m.description) + "\n\n"
+
 	height := len(m.grid)
 	if height == 0 {
 		return "Empty world"
@@ -73,8 +83,6 @@ func (m model) View() string {
 	if m.sound != "" {
 		s += "\n* Playing sound: " + m.sound + " *"
 	}
-
-	s += "\n(use h, j, k, l to move, u to undo, q to quit)"
 	s += fmt.Sprintf("\nMoves: %d", m.moves)
 	return s
 }
@@ -104,6 +112,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.x = prev.x
 				m.y = prev.y
 				m.grid = prev.grid
+				m.title = prev.title
+				m.description = prev.description
 				m.moves--
 			}
 			return m, nil
@@ -139,9 +149,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func NewModel(l Level) model {
 	return model{
-		x:    l.StartX,
-		y:    l.StartY,
-		grid: l.Grid,
+		x:           l.StartX,
+		y:           l.StartY,
+		grid:        l.Grid,
+		title:       l.Title,
+		description: l.Description,
 	}
 }
 
