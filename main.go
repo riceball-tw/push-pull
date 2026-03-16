@@ -102,6 +102,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		m.sound = ""
 		dx, dy := 0, 0
+		pull := false
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
@@ -125,6 +126,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			dy = -1
 		case "l": // right
 			dx = 1
+		case "shift+h", "H":
+			dx, pull = -1, true
+		case "shift+j", "J":
+			dy, pull = 1, true
+		case "shift+k", "K":
+			dy, pull = -1, true
+		case "shift+l", "L":
+			dx, pull = 1, true
 		}
 
 		if dx != 0 || dy != 0 {
@@ -132,10 +141,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if nx >= 0 && nx < width && ny >= 0 && ny < height {
 				currentState := m.snapshot()
 				targetTile := m.grid[ny][nx]
-				res := targetTile.MoveInto(&m, nx, ny, dx, dy)
+				res := targetTile.MoveInto(&m, nx, ny, dx, dy, pull)
 				if res.CanMove {
 					m.history = append(m.history, currentState)
 					m.moves++
+					
+					if pull {
+						// Pull logic: if we moved, check if there was a box behind us
+						bx, by := currentState.x-dx, currentState.y-dy
+						if bx >= 0 && bx < width && by >= 0 && by < height {
+							behindTile := m.grid[by][bx]
+							if behindTile.Kind() == boxKind {
+								if box, ok := behindTile.(*boxTile); ok {
+									// Move box to player's previous position
+									m.grid[currentState.y][currentState.x] = box
+									m.grid[by][bx] = e
+									box.count--
+									if box.count < 0 {
+										box.count = 0
+									}
+								}
+							}
+						}
+					}
+
 					if res.Sound != "" {
 						cmd = playSound(res.Sound)
 					}

@@ -30,7 +30,7 @@ func TestLockTile(t *testing.T) {
 	}
 
 	// Move right into box
-	res := m.grid[0][1].MoveInto(&m, 1, 0, 1, 0)
+	res := m.grid[0][1].MoveInto(&m, 1, 0, 1, 0, false)
 
 	if !res.CanMove {
 		t.Fatal("Should be able to push 10-count box into 10-count lock")
@@ -74,7 +74,7 @@ func TestLockTileInsufficientCount(t *testing.T) {
 	}
 
 	// Move right into box
-	res := m.grid[0][1].MoveInto(&m, 1, 0, 1, 0)
+	res := m.grid[0][1].MoveInto(&m, 1, 0, 1, 0, false)
 
 	if res.CanMove {
 		t.Fatal("Should NOT be able to push box into lock with insufficient count")

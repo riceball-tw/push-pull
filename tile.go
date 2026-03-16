@@ -24,7 +24,7 @@ type MoveResult struct {
 
 type Tile interface {
 	Kind() tileKind
-	MoveInto(m *model, nx, ny, dx, dy int) MoveResult
+	MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult
 	Count() int
 	Clone() Tile
 }
@@ -46,7 +46,7 @@ type emptyTile struct {
 	baseTile
 }
 
-func (t emptyTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+func (t emptyTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
 	m.x, m.y = nx, ny
 	return MoveResult{CanMove: true, Sound: t.sound}
 }
@@ -59,7 +59,7 @@ type wallTile struct {
 	baseTile
 }
 
-func (t wallTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+func (t wallTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
 	return MoveResult{CanMove: false}
 }
 
@@ -71,7 +71,7 @@ type waterTile struct {
 	baseTile
 }
 
-func (t waterTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+func (t waterTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
 	m.x, m.y = nx, ny
 	return MoveResult{CanMove: true, Sound: t.sound}
 }
@@ -85,7 +85,7 @@ type doorTile struct {
 	targetLevel Level
 }
 
-func (t doorTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+func (t doorTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
 	m.grid = t.targetLevel.Grid
 	m.x = t.targetLevel.StartX
 	m.y = t.targetLevel.StartY
@@ -103,7 +103,11 @@ type boxTile struct {
 	count int
 }
 
-func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
+	if pull {
+		// Cannot move INTO a box while pulling. 
+		return MoveResult{CanMove: false}
+	}
 	height := len(m.grid)
 	width := len(m.grid[0])
 	nnx, nny := nx+dx, ny+dy
@@ -153,7 +157,7 @@ type lockTile struct {
 	targetDoor    Tile
 }
 
-func (t *lockTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+func (t *lockTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
 	return MoveResult{CanMove: false}
 }
 

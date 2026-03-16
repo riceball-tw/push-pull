@@ -28,7 +28,7 @@ func TestBoxMerging(t *testing.T) {
 	}
 
 	// Move right into box1
-	res := m.grid[0][1].MoveInto(&m, 1, 0, 1, 0)
+	res := m.grid[0][1].MoveInto(&m, 1, 0, 1, 0, false)
 
 	if !res.CanMove {
 		t.Fatal("Should be able to push box1 into box2")
