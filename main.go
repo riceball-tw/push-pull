@@ -143,8 +143,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				targetTile := m.grid[ny][nx]
 				res := targetTile.MoveInto(&m, nx, ny, dx, dy, pull)
 				if res.CanMove {
-					m.history = append(m.history, currentState)
-					m.moves++
+					if targetTile.Kind() != doorKind {
+						m.history = append(m.history, currentState)
+						m.moves++
+					}
 					
 					if pull {
 						// Pull logic: if we moved, check if there was a box behind us

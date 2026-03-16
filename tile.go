@@ -91,6 +91,8 @@ func (t doorTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
 	m.y = t.targetLevel.StartY
 	m.title = t.targetLevel.Title
 	m.description = t.targetLevel.Description
+	m.history = nil
+	m.moves = 0
 	return MoveResult{CanMove: true, Sound: t.sound}
 }
 

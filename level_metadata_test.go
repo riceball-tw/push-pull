@@ -123,15 +123,15 @@ func TestLevelMetadataUndo(t *testing.T) {
 		t.Fatalf("failed to transition to Level Two")
 	}
 
-	// Undo
+	// Undo - should no longer go back to Level One
 	msgU := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("u")}
 	m2, _ := res1.Update(msgU)
 	res2 := m2.(model)
 
-	if res2.title != "Level One" {
-		t.Errorf("expected title to be restored to 'Level One', got %q", res2.title)
+	if res2.title != "Level Two" {
+		t.Errorf("expected title to stay 'Level Two' after undo, got %q", res2.title)
 	}
-	if res2.description != "The first level" {
-		t.Errorf("expected description to be restored to 'The first level', got %q", res2.description)
+	if res2.description != "The second level" {
+		t.Errorf("expected description to stay 'The second level' after undo, got %q", res2.description)
 	}
 }
