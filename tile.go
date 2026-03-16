@@ -218,18 +218,18 @@ var tiles = map[tileKind]tileInfo{
 	emptyKind: {
 		style: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#fff")).
-			Background(lipgloss.Color("#333")),
+			Background(lipgloss.Color("#222")),
 		char: "　",
 	},
 	wallKind: {
 		style: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#fff")).
-			Background(lipgloss.Color("#481309")),
+			Foreground(lipgloss.Color("#282525")).
+			Background(lipgloss.Color("#181818")),
 		char: "牆",
 	},
 	doorKind: {
 		style: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#fff")).
+			Foreground(lipgloss.Color("#dcd4cc")).
 			Background(lipgloss.Color("#553311")),
 		char: "門",
 	},
@@ -241,14 +241,14 @@ var tiles = map[tileKind]tileInfo{
 	},
 	boxKind: {
 		style: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#fff")).
+			Foreground(lipgloss.Color("#d9914e")).
 			Background(lipgloss.Color("#B87333")),
 		char: "箱",
 	},
 	lockKind: {
 		style: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#fff")).
-			Background(lipgloss.Color("#000000")),
+			Background(lipgloss.Color("#0f023e")),
 		char: "鎖",
 	},
 }
@@ -272,5 +272,4 @@ func (t *boxTile) Count() int {
 }
 
 var playerStyle = lipgloss.NewStyle().
-	Foreground(lipgloss.Color("#fff")).
-	Background(lipgloss.Color("#7D54F2"))
+	Foreground(lipgloss.Color("#7D54F2"))
