@@ -61,6 +61,8 @@ func (m model) View() string {
 				char := info.char
 				if bt, ok := tile.(*boxTile); ok {
 					char = bt.DisplayChar()
+				} else if lt, ok := tile.(*lockTile); ok {
+					char = lt.DisplayChar()
 				}
 				line += info.style.Render(char)
 			}
@@ -144,7 +146,7 @@ func NewModel(l Level) model {
 }
 
 func main() {
-	p := tea.NewProgram(NewModel(level1))
+	p := tea.NewProgram(NewModel(level2))
 
 	sr := beep.SampleRate(44100)
 	err := speaker.Init(sr, sr.N(time.Second/10))

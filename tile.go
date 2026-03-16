@@ -14,6 +14,7 @@ const (
 	doorKind
 	waterKind
 	boxKind
+	lockKind
 )
 
 type MoveResult struct {
@@ -124,6 +125,16 @@ func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 				m.x, m.y = nx, ny
 				return MoveResult{CanMove: true, Sound: t.sound}
 			}
+		} else if behindBoxTile.Kind() == lockKind {
+			// Push into lock
+			if targetLock, ok := behindBoxTile.(*lockTile); ok {
+				if t.count == targetLock.requiredCount {
+					m.grid[nny][nnx] = targetLock.targetDoor
+					m.grid[ny][nx] = empty
+					m.x, m.y = nx, ny
+					return MoveResult{CanMove: true, Sound: "unlock"}
+				}
+			}
 		}
 	}
 	return MoveResult{CanMove: false}
@@ -136,6 +147,39 @@ func (t *boxTile) Clone() Tile {
 	}
 }
 
+type lockTile struct {
+	baseTile
+	requiredCount int
+	targetDoor    Tile
+}
+
+func (t *lockTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
+	return MoveResult{CanMove: false}
+}
+
+func (t *lockTile) Clone() Tile {
+	return &lockTile{
+		baseTile:      t.baseTile,
+		requiredCount: t.requiredCount,
+		targetDoor:    t.targetDoor.Clone(),
+	}
+}
+
+func (t *lockTile) Count() int {
+	return t.requiredCount
+}
+
+func (t *lockTile) DisplayChar() string {
+	if t.requiredCount <= 9 {
+		fullWidthNums := []string{"０", "１", "２", "３", "４", "５", "６", "７", "８", "９"}
+		return fullWidthNums[t.requiredCount]
+	}
+	if t.requiredCount <= 99 {
+		return fmt.Sprintf("%02d", t.requiredCount)
+	}
+	return "鎖"
+}
+
 var (
 	empty = emptyTile{baseTile{kind: emptyKind, sound: "walk"}}
 	wall  = wallTile{baseTile{kind: wallKind}}
@@ -144,6 +188,23 @@ var (
 
 func newBox() *boxTile {
 	return &boxTile{baseTile: baseTile{kind: boxKind, sound: "push"}}
+}
+
+func newLock(requiredCount int, targetDoor Tile) *lockTile {
+	return &lockTile{
+		baseTile:      baseTile{kind: lockKind},
+		requiredCount: requiredCount,
+		targetDoor:    targetDoor,
+	}
+}
+
+func newDoor(targetGrid [][]Tile, targetX, targetY int) *doorTile {
+	return &doorTile{
+		baseTile:   baseTile{kind: doorKind, sound: "door"},
+		targetGrid: targetGrid,
+		targetX:    targetX,
+		targetY:    targetY,
+	}
 }
 
 type tileInfo struct {
@@ -181,6 +242,12 @@ var tiles = map[tileKind]tileInfo{
 			Foreground(lipgloss.Color("#fff")).
 			Background(lipgloss.Color("#B87333")),
 		char: "箱",
+	},
+	lockKind: {
+		style: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#fff")).
+			Background(lipgloss.Color("#000000")),
+		char: "鎖",
 	},
 }
 
