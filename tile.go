@@ -113,7 +113,7 @@ func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 			// Push the box
 			t.count++
 			m.grid[nny][nnx] = m.grid[ny][nx]
-			m.grid[ny][nx] = empty
+			m.grid[ny][nx] = e
 			m.x, m.y = nx, ny
 			return MoveResult{CanMove: true, Sound: t.sound}
 		} else if behindBoxTile.Kind() == boxKind {
@@ -121,7 +121,7 @@ func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 			t.count++
 			if targetBox, ok := behindBoxTile.(*boxTile); ok {
 				targetBox.count += t.count
-				m.grid[ny][nx] = empty
+				m.grid[ny][nx] = e
 				m.x, m.y = nx, ny
 				return MoveResult{CanMove: true, Sound: t.sound}
 			}
@@ -130,7 +130,7 @@ func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int) MoveResult {
 			if targetLock, ok := behindBoxTile.(*lockTile); ok {
 				if t.count == targetLock.requiredCount {
 					m.grid[nny][nnx] = targetLock.targetDoor
-					m.grid[ny][nx] = empty
+					m.grid[ny][nx] = e
 					m.x, m.y = nx, ny
 					return MoveResult{CanMove: true, Sound: "unlock"}
 				}
@@ -181,8 +181,8 @@ func (t *lockTile) DisplayChar() string {
 }
 
 var (
-	empty = emptyTile{baseTile{kind: emptyKind, sound: "walk"}}
-	wall  = wallTile{baseTile{kind: wallKind}}
+	e = emptyTile{baseTile{kind: emptyKind, sound: "walk"}}
+	w  = wallTile{baseTile{kind: wallKind}}
 	water = waterTile{baseTile{kind: waterKind, sound: "splash"}}
 )
 

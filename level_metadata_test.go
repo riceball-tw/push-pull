@@ -14,9 +14,9 @@ func TestLevelMetadataInitialization(t *testing.T) {
 		StartX:      1,
 		StartY:      1,
 		Grid: [][]Tile{
-			{empty, empty, empty},
-			{empty, empty, empty},
-			{empty, empty, empty},
+			{e, e, e},
+			{e, e, e},
+			{e, e, e},
 		},
 	}
 
@@ -37,7 +37,7 @@ func TestLevelMetadataView(t *testing.T) {
 		x:           0,
 		y:           0,
 		grid: [][]Tile{
-			{empty},
+			{e},
 		},
 	}
 
@@ -56,7 +56,7 @@ func TestLevelMetadataTransition(t *testing.T) {
 		Title:       "Level Two",
 		Description: "The second level",
 		Grid: [][]Tile{
-			{empty},
+			{e},
 		},
 		StartX: 0,
 		StartY: 0,
@@ -66,7 +66,7 @@ func TestLevelMetadataTransition(t *testing.T) {
 		Title:       "Level One",
 		Description: "The first level",
 		Grid: [][]Tile{
-			{empty, newDoor(level2)},
+			{e, newDoor(level2)},
 		},
 		StartX: 0,
 		StartY: 0,
@@ -96,7 +96,7 @@ func TestLevelMetadataUndo(t *testing.T) {
 		Title:       "Level Two",
 		Description: "The second level",
 		Grid: [][]Tile{
-			{empty},
+			{e},
 		},
 		StartX: 0,
 		StartY: 0,
@@ -106,7 +106,7 @@ func TestLevelMetadataUndo(t *testing.T) {
 		Title:       "Level One",
 		Description: "The first level",
 		Grid: [][]Tile{
-			{empty, newDoor(level2)},
+			{e, newDoor(level2)},
 		},
 		StartX: 0,
 		StartY: 0,

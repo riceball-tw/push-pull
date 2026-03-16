@@ -19,7 +19,7 @@ func TestBoxMerging(t *testing.T) {
 	box2.count = 3
 	
 	grid := [][]Tile{
-		{empty, box1, box2, empty},
+		{e, box1, box2, e},
 	}
 	m := model{
 		x:    0,

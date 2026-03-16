@@ -21,7 +21,7 @@ func TestLockTile(t *testing.T) {
 	box.count = 10 // Exact count required
 
 	grid := [][]Tile{
-		{empty, box, lock, empty},
+		{e, box, lock, e},
 	}
 	m := model{
 		x:    0,
@@ -65,7 +65,7 @@ func TestLockTileInsufficientCount(t *testing.T) {
 	box.count = 9 // Will NOT become 10 when pushed, still < 10
 
 	grid := [][]Tile{
-		{empty, box, lock, empty},
+		{e, box, lock, e},
 	}
 	m := model{
 		x:    0,

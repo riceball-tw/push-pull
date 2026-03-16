@@ -35,7 +35,7 @@ func TestBoxCountDisplay(t *testing.T) {
 	// Setup a grid with a box
 	box := newBox()
 	grid := [][]Tile{
-		{empty, box, empty},
+		{e, box, e},
 	}
 	m := model{
 		x:    0,

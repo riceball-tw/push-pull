@@ -15,8 +15,8 @@ func Test_Level_Initialization(t *testing.T) {
 		StartX: 5,
 		StartY: 10,
 		Grid: [][]Tile{
-			{empty, wall},
-			{empty, empty},
+			{e, w},
+			{e, e},
 		},
 	}
 
@@ -35,9 +35,9 @@ func Test_Level_Initialization(t *testing.T) {
 
 func Test_Character_Movement(t *testing.T) {
 	grid := [][]Tile{
-		{empty, empty, empty},
-		{empty, wall,  empty},
-		{empty, empty, empty},
+		{e, e, e},
+		{e, w,  e},
+		{e, e, e},
 	}
 
 	m := model{
@@ -98,9 +98,9 @@ func Test_Character_Movement(t *testing.T) {
 
 func Test_Individual_Character_Movement(t *testing.T) {
 	grid := [][]Tile{
-		{empty, empty, empty},
-		{empty, wall,  empty},
-		{empty, empty, empty},
+		{e, e, e},
+		{e, w,  e},
+		{e, e, e},
 	}
 
 	tests := []struct {
@@ -143,7 +143,7 @@ func Test_Individual_Character_Movement(t *testing.T) {
 }
 
 func Test_Quit(t *testing.T) {
-	m := model{x: 0, y: 0, grid: [][]Tile{{empty}}}
+	m := model{x: 0, y: 0, grid: [][]Tile{{e}}}
 	
 	// Test 'q'
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
@@ -162,14 +162,14 @@ func Test_Quit(t *testing.T) {
 
 func Test_Door_Teleport(t *testing.T) {
 	grid2 := [][]Tile{
-		{empty, empty, empty},
-		{empty, empty, empty},
-		{empty, empty, empty},
+		{e, e, e},
+		{e, e, e},
+		{e, e, e},
 	}
 	grid1 := [][]Tile{
-		{empty, empty, empty},
-		{empty, empty, empty},
-		{empty, empty, empty},
+		{e, e, e},
+		{e, e, e},
+		{e, e, e},
 	}
 
 	// Place a door in grid1 at (1,1) leading to grid2
@@ -195,7 +195,7 @@ func Test_Door_Teleport(t *testing.T) {
 
 	// Verify grid changed (grid2 should have different pointer/identity if we want to be strict,
 	// but here we check if a tile change in grid2 is reflected in res.grid)
-	grid2[0][0] = wall
+	grid2[0][0] = w
 	if res.grid[0][0].Kind() != wallKind {
 		t.Errorf("expected grid to be grid2")
 	}
@@ -203,8 +203,8 @@ func Test_Door_Teleport(t *testing.T) {
 
 func Test_Sound_Triggers(t *testing.T) {
 	grid := [][]Tile{
-		{empty, water},
-		{empty, empty},
+		{e, water},
+		{e, e},
 	}
 	// Note: water has sound: "splash"
 
@@ -257,9 +257,9 @@ func Test_Sound_Triggers(t *testing.T) {
 }
 
 func Test_Door_Sound(t *testing.T) {
-	grid2 := [][]Tile{{empty}}
+	grid2 := [][]Tile{{e}}
 	grid1 := [][]Tile{
-		{empty, doorTile{baseTile: baseTile{kind: doorKind, sound: "creak"}, targetLevel: Level{Grid: grid2, StartX: 0, StartY: 0}}},
+		{e, doorTile{baseTile: baseTile{kind: doorKind, sound: "creak"}, targetLevel: Level{Grid: grid2, StartX: 0, StartY: 0}}},
 	}
 
 	m := model{
@@ -313,7 +313,7 @@ func Test_Push_Box(t *testing.T) {
 		{
 			name: "push box right into empty space",
 			grid: [][]Tile{
-				{empty, box, empty, empty},
+				{e, box, e, e},
 			},
 			startX:    0,
 			startY:    0,
@@ -329,7 +329,7 @@ func Test_Push_Box(t *testing.T) {
 		{
 			name: "push box right into wall",
 			grid: [][]Tile{
-				{empty, box, wall},
+				{e, box, w},
 			},
 			startX:    0,
 			startY:    0,
@@ -345,7 +345,7 @@ func Test_Push_Box(t *testing.T) {
 		{
 			name: "push box right into another box",
 			grid: [][]Tile{
-				{empty, box, box, empty},
+				{e, box, box, e},
 			},
 			startX:    0,
 			startY:    0,
@@ -361,7 +361,7 @@ func Test_Push_Box(t *testing.T) {
 		{
 			name: "push box right into boundary",
 			grid: [][]Tile{
-				{empty, box},
+				{e, box},
 			},
 			startX:    0,
 			startY:    0,
@@ -377,9 +377,9 @@ func Test_Push_Box(t *testing.T) {
 		{
 			name: "push box down into empty space",
 			grid: [][]Tile{
-				{empty},
+				{e},
 				{box},
-				{empty},
+				{e},
 			},
 			startX:    0,
 			startY:    0,
@@ -446,9 +446,9 @@ func Test_Push_Box(t *testing.T) {
 
 func Test_Undo(t *testing.T) {
 	grid := [][]Tile{
-		{empty, empty, empty},
-		{empty, box,   empty},
-		{empty, empty, empty},
+		{e, e, e},
+		{e, box,   e},
+		{e, e, e},
 	}
 
 	m := model{
