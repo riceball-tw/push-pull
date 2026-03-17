@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	box = newBox()
+	box = b()
 )
 
 func Test_Level_Initialization(t *testing.T) {

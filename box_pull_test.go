@@ -8,7 +8,7 @@ import (
 
 func TestBoxMoveIntoWithPull(t *testing.T) {
 	// Setup a boxTile
-	box := newBox()
+	box := b()
 	box.count = 5
 	m := &model{} // model is not used much in the initial check but required by signature
 
@@ -24,7 +24,7 @@ func TestModelPullLogic(t *testing.T) {
 	// Setup a grid: [Empty, Player, Box]
 	// Player is at (1, 0). Box is at (0, 0).
 	// We want to move right (to (2, 0)) and pull the box.
-	box := newBox()
+	box := b()
 	box.count = 5
 	grid := [][]Tile{
 		{box, e, e},

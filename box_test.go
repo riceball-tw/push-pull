@@ -21,7 +21,7 @@ func TestDisplayChar(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			box := newBox()
+			box := b()
 			box.count = tt.count
 			got := box.DisplayChar()
 			if got != tt.want {
@@ -33,7 +33,7 @@ func TestDisplayChar(t *testing.T) {
 
 func TestBoxCountDisplay(t *testing.T) {
 	// Setup a grid with a box
-	box := newBox()
+	box := b()
 	grid := [][]Tile{
 		{e, box, e},
 	}

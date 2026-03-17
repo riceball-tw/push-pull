@@ -189,7 +189,7 @@ func NewModel(l Level) model {
 }
 
 func main() {
-	p := tea.NewProgram(NewModel(level1))
+	p := tea.NewProgram(NewModel(level4))
 
 	sr := beep.SampleRate(44100)
 	err := speaker.Init(sr, sr.N(time.Second/10))

@@ -17,7 +17,7 @@ func TestLockTile(t *testing.T) {
 		requiredCount: 10,
 		targetDoor:    targetDoor,
 	}
-	box := newBox()
+	box := b()
 	box.count = 10 // Exact count required
 
 	grid := [][]Tile{
@@ -61,7 +61,7 @@ func TestLockTileInsufficientCount(t *testing.T) {
 		requiredCount: 10,
 		targetDoor:    targetDoor,
 	}
-	box := newBox()
+	box := b()
 	box.count = 9 // Will NOT become 10 when pushed, still < 10
 
 	grid := [][]Tile{

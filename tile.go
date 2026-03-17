@@ -192,7 +192,7 @@ var (
 	water = waterTile{baseTile{kind: waterKind, sound: "splash"}}
 )
 
-func newBox() *boxTile {
+func b() *boxTile {
 	return &boxTile{baseTile: baseTile{kind: boxKind, sound: "push"}}
 }
 

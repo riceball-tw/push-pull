@@ -13,8 +13,8 @@ func TestBoxMerging(t *testing.T) {
 	// Resulting Box at (2, 0) should have count = Box1.count + Box2.count + 1 (since pushing adds 1).
     // Let's check how count currently works.
 
-	box1 := newBox()
-	box2 := newBox()
+	box1 := b()
+	box2 := b()
 	box1.count = 2
 	box2.count = 3
 	
