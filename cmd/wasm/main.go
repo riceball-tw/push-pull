@@ -8,6 +8,8 @@ import (
 	"push-pull/internal/game"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 type xtermWriter struct {
@@ -20,12 +22,13 @@ func (w *xtermWriter) Write(p []byte) (n int, err error) {
 }
 
 func main() {
-	// Force full true color support in WASM environment.
-	// Without these, lipgloss/termenv cannot detect the terminal profile
-	// and may fall back to a limited palette (or no color at all),
-	// causing similar hex colors to collapse into the same value.
 	os.Setenv("TERM", "xterm-256color")
-	os.Setenv("COLORTERM", "truecolor")
+
+	// Force lipgloss to use full 24-bit true color.
+	// In WASM, termenv cannot auto-detect the terminal's color profile,
+	// so without this it falls back to a limited palette (or no color),
+	// causing similar hex values to map to the same color.
+	lipgloss.SetColorProfile(termenv.TrueColor)
 
 	c := make(chan struct{})
 
@@ -59,3 +62,4 @@ func main() {
 	// Wait indefinitely for the core game loop to complete or user to exit
 	<-c
 }
+
