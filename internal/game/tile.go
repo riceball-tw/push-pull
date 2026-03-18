@@ -243,7 +243,7 @@ var tiles = map[tileKind]tileInfo{
 	},
 	boxKind: {
 		style: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#d9914e")).
+			Foreground(lipgloss.Color("#0f023e")).
 			Background(lipgloss.Color("#B87333")),
 		char: "箱",
 	},
