@@ -1,4 +1,4 @@
-module bubble-tea
+module push-pull
 
 go 1.26.1
 
