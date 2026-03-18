@@ -29,7 +29,7 @@ var level2 = Level{
 	Grid: [][]Tile{
 		{w, w, w, w, w, w, w, w},
 		{w, e, e, e, e, e, e, w},
-		{w, e, e, e, newBox(), e, d3, w},
+		{w, e, e, e, b(), e, d3, w},
 		{w, e, e, e, e, e, e, w},
 		{w, w, w, w, w, w, w, w},
 
@@ -45,7 +45,7 @@ var level3 = Level{
 	Grid: [][]Tile{
 		{w, w, w, w, w, w, w, w, w, w},
 		{w, e, e, e, e, e, e, e, e, w},
-		{w, e, e, e, d4, e, e, newBox(), e, w},
+		{w, e, e, e, d4, e, e, b(), e, w},
 		{w, e, e, e, e, e, e, e, e, w},
 		{w, w, w, w, w, w, w, w, w, w},
 
@@ -57,18 +57,75 @@ var d4 = newLock(1, newDoor(level4))
 
 
 var level4 = Level{
-	Title:       "Level 4 - Combine",
+	Title:       "Level 4 - Push Push",
 	Description: "Combine 2 box",
 	Grid: [][]Tile{
 		{w, w, w, w, w, w, w, w},
-		{w, e, newBox(), e, newBox(), e, d5, w},
+		{w, e, b(), e, b(), e, d5, w},
 		{w, e, e, e, e, e, e, w},
 		{w, w, w, w, w, w, w, w},
 	},
 	StartX: 1,
 	StartY: 1,
 }
-var d5 = newLock(4, newDoor(winLevel))
+var d5 = newLock(4, newDoor(level5))
+
+var level5 = Level{
+	Title:       "Level 5 - Pull Push",
+	Description: "x",
+	Grid: [][]Tile{
+		{w, w, w, w, w, w, w, w},
+		{w, e, b(), e, e, b(), d6, w},
+		{w, e, e, e, e, e, e, w},
+		{w, w, w, w, w, w, w, w},
+	},
+	StartX: 1,
+	StartY: 1,
+}
+var d6 = newLock(2, newDoor(level6))
+
+var level6 = Level{
+	Title:       "Level 6 - Charge",
+	Description: "x",
+	Grid: [][]Tile{
+		{w, w, w, w, w, w, w, w, w, w, w, w, w},
+		{w, e, e, e, e, e, e, e, e, e, b(), d7, w},
+		{w, w, w, w, w, w, w, w, w, w, w, w, w},
+	},
+	StartX: 1,
+	StartY: 1,
+}
+var d7 = newLock(8, newDoor(level7))
+
+var level7 = Level{
+	Title:       "Level 7 - Circle",
+	Description: "x",
+	Grid: [][]Tile{
+		{w, w, w, w, w, w},
+		{w, e, e, e, w, w},
+		{w, e, d8, e, e, w},
+		{w, e, e, b(), e, w, w, e, e},
+		{w, w, e, e, w, w},
+	},
+	StartX: 1,
+	StartY: 1,
+}
+var d8 = newLock(2, newDoor(level8))
+
+var level8 = Level{
+	Title:       "Level 8 - x",
+	Description: "x",
+	Grid: [][]Tile{
+		{w, w, w, w, w},
+		{w, e, e, w, w},
+		{w, d9, b(), e, w},
+		{w, b(), e, e, w, w, e, e},
+		{w, e, e, w, w},
+	},
+	StartX: 1,
+	StartY: 1,
+}
+var d9 = newLock(3, newDoor(winLevel))
 
 var winLevel = Level{
 	Title:       "Victory",
