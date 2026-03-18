@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"fmt"
@@ -107,7 +107,7 @@ type boxTile struct {
 
 func (t *boxTile) MoveInto(m *model, nx, ny, dx, dy int, pull bool) MoveResult {
 	if pull {
-		// Cannot move INTO a box while pulling. 
+		// Cannot move INTO a box while pulling.
 		return MoveResult{CanMove: false}
 	}
 	height := len(m.grid)
@@ -187,8 +187,8 @@ func (t *lockTile) DisplayChar() string {
 }
 
 var (
-	e = emptyTile{baseTile{kind: emptyKind, sound: "walk"}}
-	w  = wallTile{baseTile{kind: wallKind}}
+	e     = emptyTile{baseTile{kind: emptyKind, sound: "walk"}}
+	w     = wallTile{baseTile{kind: wallKind}}
 	water = waterTile{baseTile{kind: waterKind, sound: "splash"}}
 )
 

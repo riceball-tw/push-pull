@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"testing"
@@ -36,7 +36,7 @@ func Test_Level_Initialization(t *testing.T) {
 func Test_Character_Movement(t *testing.T) {
 	grid := [][]Tile{
 		{e, e, e},
-		{e, w,  e},
+		{e, w, e},
 		{e, e, e},
 	}
 
@@ -99,17 +99,17 @@ func Test_Character_Movement(t *testing.T) {
 func Test_Individual_Character_Movement(t *testing.T) {
 	grid := [][]Tile{
 		{e, e, e},
-		{e, w,  e},
+		{e, w, e},
 		{e, e, e},
 	}
 
 	tests := []struct {
-		name  string
+		name   string
 		startX int
 		startY int
-		key   string
-		wantX int
-		wantY int
+		key    string
+		wantX  int
+		wantY  int
 	}{
 		{"move right", 0, 0, "l", 1, 0},
 		{"move left", 1, 0, "h", 0, 0},
@@ -135,7 +135,7 @@ func Test_Individual_Character_Movement(t *testing.T) {
 			newModel, _ := m.Update(msg)
 			res := newModel.(model)
 			if res.x != tt.wantX || res.y != tt.wantY {
-				t.Errorf("%s: moved from (%d,%d) to (%d,%d) with %s, want (%d,%d)", 
+				t.Errorf("%s: moved from (%d,%d) to (%d,%d) with %s, want (%d,%d)",
 					tt.name, tt.startX, tt.startY, res.x, res.y, tt.key, tt.wantX, tt.wantY)
 			}
 		})
@@ -144,7 +144,7 @@ func Test_Individual_Character_Movement(t *testing.T) {
 
 func Test_Quit(t *testing.T) {
 	m := model{x: 0, y: 0, grid: [][]Tile{{e}}}
-	
+
 	// Test 'q'
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
 	_, cmd := m.Update(msg)
@@ -293,7 +293,6 @@ func Test_Door_Sound(t *testing.T) {
 		t.Errorf("expected command to return soundMsg, got %T", soundM)
 	}
 }
-
 
 func Test_Push_Box(t *testing.T) {
 	tests := []struct {
@@ -447,7 +446,7 @@ func Test_Push_Box(t *testing.T) {
 func Test_Undo(t *testing.T) {
 	grid := [][]Tile{
 		{e, e, e},
-		{e, box,   e},
+		{e, box, e},
 		{e, e, e},
 	}
 

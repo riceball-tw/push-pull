@@ -1,4 +1,4 @@
-package main
+package game
 
 type Level struct {
 	Title       string
@@ -32,7 +32,6 @@ var level2 = Level{
 		{w, e, e, e, b(), e, d3, w},
 		{w, e, e, e, e, e, e, w},
 		{w, w, w, w, w, w, w, w},
-
 	},
 	StartX: 2,
 	StartY: 2,
@@ -48,13 +47,11 @@ var level3 = Level{
 		{w, e, e, e, d4, e, e, b(), e, w},
 		{w, e, e, e, e, e, e, e, e, w},
 		{w, w, w, w, w, w, w, w, w, w},
-
 	},
 	StartX: 2,
 	StartY: 2,
 }
 var d4 = newLock(1, newDoor(level4))
-
 
 var level4 = Level{
 	Title:       "Level 4 - Push Push",

@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"testing"
@@ -25,7 +25,7 @@ func TestPullBox(t *testing.T) {
 
 	// In model.Update:
 	currentState := m.snapshot()
-	targetTile := m.grid[ny][nx] // emptyTile at (0, 1)
+	targetTile := m.grid[ny][nx]                         // emptyTile at (0, 1)
 	res := targetTile.MoveInto(&m, nx, ny, dx, dy, true) // pull=true
 
 	if !res.CanMove {
@@ -81,8 +81,8 @@ func TestPullIntoWall(t *testing.T) {
 	dx, dy := -1, 0
 	nx, ny := m.x+dx, m.y+dy // (0, 0)
 
-	m.snapshot() // currentState
-	targetTile := m.grid[ny][nx] // wallTile at (0, 0)
+	m.snapshot()                                         // currentState
+	targetTile := m.grid[ny][nx]                         // wallTile at (0, 0)
 	res := targetTile.MoveInto(&m, nx, ny, dx, dy, true) // pull=true
 
 	if res.CanMove {

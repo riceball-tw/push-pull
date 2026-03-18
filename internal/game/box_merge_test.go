@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"testing"
@@ -11,13 +11,13 @@ func TestBoxMerging(t *testing.T) {
 	// Box2 at (2, 0)
 	// Expected: Player moves to (1, 0), Box1 merges into Box2 at (2, 0).
 	// Resulting Box at (2, 0) should have count = Box1.count + Box2.count + 1 (since pushing adds 1).
-    // Let's check how count currently works.
+	// Let's check how count currently works.
 
 	box1 := b()
 	box2 := b()
 	box1.count = 2
 	box2.count = 3
-	
+
 	grid := [][]Tile{
 		{e, box1, box2, e},
 	}

@@ -1,8 +1,7 @@
-package main
+package game
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -147,7 +146,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.history = append(m.history, currentState)
 						m.moves++
 					}
-					
+
 					if pull {
 						// Pull logic: if we moved, check if there was a box behind us
 						bx, by := currentState.x-dx, currentState.y-dy
@@ -188,16 +187,14 @@ func NewModel(l Level) model {
 	}
 }
 
-func main() { 
-	p := tea.NewProgram(NewModel(level1))
-
+// Run starts the Bubble Tea program using the initial level configuration.
+func Run() error {
 	sr := beep.SampleRate(44100)
-	err := speaker.Init(sr, sr.N(time.Second/10))
-	if err != nil {
-		log.Fatal(err)
+	if err := speaker.Init(sr, sr.N(time.Second/10)); err != nil {
+		return err
 	}
 
-	if _, pErr := p.Run(); pErr != nil {
-		log.Panic(pErr)
-	}
+	p := tea.NewProgram(NewModel(level1))
+	_, err := p.Run()
+	return err
 }

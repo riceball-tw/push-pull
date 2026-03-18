@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ func TestLockTile(t *testing.T) {
 	// Box at (1, 0) with count 9
 	// Lock at (2, 0) requiring 10
 	// Door is the target of the lock.
-	
+
 	targetDoor := doorTile{baseTile: baseTile{kind: doorKind}}
 	lock := &lockTile{
 		baseTile:      baseTile{kind: lockKind},
@@ -54,7 +54,7 @@ func TestLockTileInsufficientCount(t *testing.T) {
 	// Player at (0, 0)
 	// Box at (1, 0) with count 1
 	// Lock at (2, 0) requiring 10
-	
+
 	targetDoor := doorTile{baseTile: baseTile{kind: doorKind}}
 	lock := &lockTile{
 		baseTile:      baseTile{kind: lockKind},
