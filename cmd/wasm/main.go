@@ -52,6 +52,9 @@ func main() {
 	defer onDataCallback.Release()
 	term.Call("onData", onDataCallback)
 
+	// Make the callback available globally so mobile buttons can use it
+	js.Global().Set("_wasmOnData", onDataCallback)
+
 	outW := &xtermWriter{term: term}
 
 	p, err := game.NewProgram(tea.WithInput(inR), tea.WithOutput(outW))

@@ -97,6 +97,56 @@
                 width: 10px;
                 height: 10px;
             }
+
+            #mobile-controls {
+                display: block !important;
+            }
+        }
+
+        #mobile-controls {
+            display: none;
+            background: var(--header-bg);
+            padding: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            justify-items: center;
+        }
+
+        .mobile-btn {
+            background: #2e3440;
+            color: #d8dee9;
+            border: 1px solid #4c566a;
+            border-radius: 6px;
+            padding: 12px 0;
+            font-size: 16px;
+            text-align: center;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+            transition: background 0.1s, transform 0.1s;
+        }
+
+        .mobile-btn:active {
+            background: #434c5e;
+            transform: scale(0.95);
+        }
+
+        .btn-undo { color: #ebcb8b; }
+        .btn-quit { color: #bf616a; }
+        .btn-pull { color: #a3be8c; }
+        .btn-pull.active {
+            background: #a3be8c;
+            color: #2e3440;
         }
 
         #terminal-header {
@@ -191,6 +241,18 @@
             </a>
         </div>
         <div id="terminal-container"></div>
+        <div id="mobile-controls">
+            <div class="control-group">
+                <div class="mobile-btn btn-undo" onclick="sendKey('u')">Undo</div>
+                <div class="mobile-btn" onclick="sendKey('k')">↑</div>
+                <div class="mobile-btn btn-quit" onclick="sendKey('q')">Quit</div>
+                <div class="mobile-btn" onclick="sendKey('h')">←</div>
+                <div class="mobile-btn" onclick="sendKey('j')">↓</div>
+                <div class="mobile-btn" onclick="sendKey('l')">→</div>
+                <div class="mobile-btn btn-pull" id="pull-btn" onclick="togglePull()">Pull</div>
+                <div class="mobile-btn" style="visibility: hidden;"></div>
+            </div>
+        </div>
     </div>
     <script>
         // Setup xterm.js
@@ -251,6 +313,31 @@
         
         // Make terminal available to Go side
         window.term = term;
+
+        function togglePull() {
+            const btn = document.getElementById('pull-btn');
+            btn.classList.toggle('active');
+        }
+
+        function sendKey(key) {
+            const pullActive = document.getElementById('pull-btn').classList.contains('active');
+            let out = key;
+            if (pullActive && ['h', 'j', 'k', 'l'].includes(key)) {
+                out = key.toUpperCase();
+            }
+            // Trigger the onData event manually
+            // Since xterm.js doesn't have an easy public way to trigger 'onData',
+            // and our Go code listens to onData, we use this trick:
+            // xterm's core uses a handler for data.
+            // But we can just use the terminal's internal event emitter if needed,
+            // however, a more reliable way is to have the Go code listen to a custom 
+            // function we provide.
+            
+            // For now, let's try to find the callback from Go
+            if (window._wasmOnData) {
+                window._wasmOnData(out);
+            }
+        }
 
         // Load and run the WebAssembly module
         if (!WebAssembly.instantiateStreaming) {
