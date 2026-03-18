@@ -188,13 +188,13 @@ func NewModel(l Level) model {
 }
 
 // Run starts the Bubble Tea program using the initial level configuration.
-func Run() error {
+func Run(opts ...tea.ProgramOption) error {
 	sr := beep.SampleRate(44100)
 	if err := speaker.Init(sr, sr.N(time.Second/10)); err != nil {
 		return err
 	}
 
-	p := tea.NewProgram(NewModel(level1))
+	p := tea.NewProgram(NewModel(level1), opts...)
 	_, err := p.Run()
 	return err
 }
