@@ -49,6 +49,54 @@
             flex-direction: column;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            #terminal-wrapper {
+                width: 95vw;
+                height: 90vh;
+                min-width: auto;
+                min-height: auto;
+                max-width: none;
+                max-height: none;
+                border-radius: 8px;
+            }
+
+            #terminal-header {
+                height: 36px;
+                padding: 0 10px;
+            }
+
+            #terminal-container {
+                padding: 10px;
+            }
+
+            #terminal-title {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #terminal-wrapper {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+
+            #terminal-container {
+                padding: 5px;
+            }
+
+            .window-controls {
+                gap: 5px;
+            }
+
+            .control {
+                width: 10px;
+                height: 10px;
+            }
         }
 
         #terminal-header {
@@ -170,12 +218,21 @@
                 brightWhite: '#c0caf5'
             },
             fontFamily: '"JetBrains Mono", "Fira Code", "PingFang SC", "Microsoft YaHei", "Source Han Sans", sans-serif, monospace',
-            fontSize: 16,
+            fontSize: window.innerWidth < 480 ? 12 : 16,
             fontWeight: 400,
             lineHeight: 1.1,
             letterSpacing: 0,
             cursorBlink: true,
             cursorStyle: 'block'
+        });
+
+        // Dynamic font size on resize
+        window.addEventListener('resize', () => {
+            const newFontSize = window.innerWidth < 480 ? 12 : 16;
+            if (term.options.fontSize !== newFontSize) {
+                term.options.fontSize = newFontSize;
+            }
+            fitAddon.fit();
         });
         
         const fitAddon = new FitAddon.FitAddon();
@@ -192,11 +249,6 @@
             setTimeout(() => fitAddon.fit(), 100);
         }
         
-        // Handle window resize
-        window.addEventListener('resize', () => {
-             fitAddon.fit();
-        });
-
         // Make terminal available to Go side
         window.term = term;
 
