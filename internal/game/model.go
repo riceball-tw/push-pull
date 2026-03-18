@@ -189,12 +189,24 @@ func NewModel(l Level) model {
 
 // Run starts the Bubble Tea program using the initial level configuration.
 func Run(opts ...tea.ProgramOption) error {
-	sr := beep.SampleRate(44100)
-	if err := speaker.Init(sr, sr.N(time.Second/10)); err != nil {
+	p, err := NewProgram(opts...)
+	if err != nil {
 		return err
 	}
 
-	p := tea.NewProgram(NewModel(level1), opts...)
-	_, err := p.Run()
+	_, err = p.Run()
 	return err
+}
+
+// NewProgram constructs a Bubble Tea program configured with the game's
+// initial state. It also sets up the audio speaker so callers can choose when
+// to run the program (useful for WASM where we need to inject window sizes
+// before the event loop starts).
+func NewProgram(opts ...tea.ProgramOption) (*tea.Program, error) {
+	sr := beep.SampleRate(44100)
+	if err := speaker.Init(sr, sr.N(time.Second/10)); err != nil {
+		return nil, err
+	}
+
+	return tea.NewProgram(NewModel(level1), opts...), nil
 }

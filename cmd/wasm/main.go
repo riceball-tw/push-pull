@@ -51,9 +51,36 @@ func main() {
 
 	outW := &xtermWriter{term: term}
 
+	p, err := game.NewProgram(tea.WithInput(inR), tea.WithOutput(outW))
+	if err != nil {
+		js.Global().Get("console").Call("error", "Failed to init program: ", err.Error())
+		return
+	}
+
+	sendWindowSize := func(cols, rows int) {
+		if cols <= 0 || rows <= 0 {
+			return
+		}
+		go p.Send(tea.WindowSizeMsg{Width: cols, Height: rows})
+	}
+
+	// Seed initial size so Bubble Tea knows how wide/tall the xterm surface is.
+	sendWindowSize(term.Get("cols").Int(), term.Get("rows").Int())
+
+	// Keep Bubble Tea in sync with xterm.js resizing (fit addon updates cols/rows).
+	onResize := js.FuncOf(func(this js.Value, args []js.Value) any {
+		evt := term
+		if len(args) > 0 {
+			evt = args[0]
+		}
+		sendWindowSize(evt.Get("cols").Int(), evt.Get("rows").Int())
+		return nil
+	})
+	defer onResize.Release()
+	term.Call("onResize", onResize)
+
 	go func() {
-		err := game.Run(tea.WithInput(inR), tea.WithOutput(outW))
-		if err != nil {
+		if _, err := p.Run(); err != nil {
 			js.Global().Get("console").Call("error", "Game crashed: ", err.Error())
 		}
 		close(c)
@@ -62,4 +89,3 @@ func main() {
 	// Wait indefinitely for the core game loop to complete or user to exit
 	<-c
 }
-
