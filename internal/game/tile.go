@@ -225,8 +225,8 @@ var tiles = map[tileKind]tileInfo{
 	},
 	wallKind: {
 		style: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#282525")).
-			Background(lipgloss.Color("#181818")),
+			Foreground(lipgloss.Color("#4e4e4e")).
+			Background(lipgloss.Color("#3a3a3a")),
 		char: "牆",
 	},
 	doorKind: {
