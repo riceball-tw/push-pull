@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,6 +19,7 @@ type model struct {
 	history     []state
 	title       string
 	description string
+	audioOnce   *sync.Once
 }
 
 type state struct {
@@ -95,10 +97,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
-	case soundMsg:
-		m.sound = string(msg)
-		return m, nil
 	case tea.KeyMsg:
+		// Initialize audio on first key press to satisfy browser's user gesture requirement.
+		// Doing it here instead of NewProgram avoids blocking the initial render in WASM.
+		if m.audioOnce != nil {
+			m.audioOnce.Do(func() {
+				sr := beep.SampleRate(44100)
+				_ = speaker.Init(sr, sr.N(time.Second/10))
+			})
+		}
 		m.sound = ""
 		dx, dy := 0, 0
 		pull := false
@@ -172,6 +179,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		}
+	case soundMsg:
+		m.sound = string(msg)
+		return m, nil
 	}
 
 	return m, cmd
@@ -184,6 +194,7 @@ func NewModel(l Level) model {
 		grid:        l.Grid,
 		title:       l.Title,
 		description: l.Description,
+		audioOnce:   &sync.Once{},
 	}
 }
 
@@ -199,14 +210,7 @@ func Run(opts ...tea.ProgramOption) error {
 }
 
 // NewProgram constructs a Bubble Tea program configured with the game's
-// initial state. It also sets up the audio speaker so callers can choose when
-// to run the program (useful for WASM where we need to inject window sizes
-// before the event loop starts).
+// initial state.
 func NewProgram(opts ...tea.ProgramOption) (*tea.Program, error) {
-	sr := beep.SampleRate(44100)
-	if err := speaker.Init(sr, sr.N(time.Second/10)); err != nil {
-		return nil, err
-	}
-
 	return tea.NewProgram(NewModel(level1), opts...), nil
 }
