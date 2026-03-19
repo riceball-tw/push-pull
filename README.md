@@ -1,6 +1,8 @@
-# Push Pull - Bubble Tea TUI with WASM Port
+# Push Pull Puzzle Game
 
-Push Pull is a terminal-based puzzle game built with [Bubble Tea](https://github.com/charmbracelet/bubbletea). This version includes a WebAssembly (WASM) port that allows the game to run directly in any modern web browser.
+> Push & Pull box to unlock doors! Puzzle game in terminal or webpage through WASM
+
+Built with [Bubble Tea](https://github.com/charmbracelet/bubbletea). This version includes a WebAssembly (WASM) port that allows the game to run directly in any modern web browser.
 
 ## How to Run
 
