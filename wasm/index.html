@@ -4,282 +4,225 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Pull - WebAssembly</title>
+
     <!-- xterm.js -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
-    
+
     <!-- Go WASM execution -->
     <script src="wasm_exec.js"></script>
 
+    <!-- WebTUI – full library via CDN -->
     <style>
-        :root {
-            --bg-color: #1a1b26;
-            --term-bg: #24283b;
-            --header-bg: #1f2335;
-            --text-main: #c0caf5;
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --border-radius: 12px;
-        }
+        @import 'https://cdn.jsdelivr.net/npm/@webtui/css@0.0.3/dist/full.css';
+    </style>
 
-        body, html {
+    <style>
+        /* ── layout ────────────────────────────────── */
+        html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            background: radial-gradient(circle at center, #24283b 0%, #1a1b26 100%);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
-        }
-
-        #terminal-wrapper {
-            width: 80vw;
-            height: 70vh;
-            min-width: 600px;
-            min-height: 450px;
-            max-width: 900px;
-            max-height: 600px;
-            background: var(--term-bg);
-            border-radius: var(--border-radius);
-            box-shadow: 0 20px 50px var(--shadow-color);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        @media (max-width: 768px) {
-            #terminal-wrapper {
-                width: 95vw;
-                height: 90vh;
-                min-width: auto;
-                min-height: auto;
-                max-width: none;
-                max-height: none;
-                border-radius: 8px;
-            }
-
-            #terminal-header {
-                height: 36px;
-                padding: 0 10px;
-            }
-
-            #terminal-container {
-                padding: 10px;
-            }
-
-            #terminal-title {
-                font-size: 11px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            #terminal-wrapper {
-                width: 100vw;
-                height: 100vh;
-                border-radius: 0;
-                border: none;
-            }
-
-            #terminal-container {
-                padding: 5px;
-            }
-
-            .window-controls {
-                gap: 5px;
-            }
-
-            .control {
-                width: 10px;
-                height: 10px;
-            }
-
-            #mobile-controls {
-                display: block !important;
-            }
-        }
-
-        #mobile-controls {
-            display: none;
-            background: var(--header-bg);
-            padding: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            user-select: none;
-            flex-shrink: 0;
-        }
-
-        .control-group {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            justify-items: center;
-        }
-
-        .mobile-btn {
-            background: #2e3440;
-            color: #d8dee9;
-            border: 1px solid #4c566a;
-            border-radius: 6px;
-            padding: 12px 0;
-            font-size: 16px;
-            text-align: center;
-            cursor: pointer;
-            width: 100%;
-            display: flex;
             justify-content: center;
             align-items: center;
-            touch-action: manipulation;
-            transition: background 0.1s, transform 0.1s;
+            background: #2c2c2c;
+            color: #2c2c2c;
+            overflow: hidden;
         }
 
-        .mobile-btn:active {
-            background: #434c5e;
-            transform: scale(0.95);
+        /* outer page wrapper – gives us a centred column */
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            width: 80vw;
+            max-width: 900px;
         }
 
-        .btn-undo { color: #ebcb8b; }
-        .btn-quit { color: #bf616a; }
-        .btn-pull { color: #a3be8c; }
-        .btn-pull.active {
-            background: #a3be8c;
-            color: #2e3440;
-        }
-
-        #terminal-header {
-            background: var(--header-bg);
-            height: 40px;
+        /* ── header bar (above the box) ────────────── */
+        #page-header {
+            width: 100%;
             display: flex;
             align-items: center;
-            padding: 0 15px;
-            user-select: none;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+            justify-content: space-between;
+            padding: 0 1ch;
+            box-sizing: border-box;
+            /* shear the header so it sits flush on the box top border */
+            margin-bottom: -1px;
+            z-index: 1;
         }
 
-        .window-controls {
-            display: flex;
-            gap: 8px;
-        }
-
-        .control {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .close { background-color: #ff5f56; }
-        .minimize { background-color: #ffbd2e; }
-        .maximize { background-color: #27c93f; }
-
-        #terminal-title {
-            flex-grow: 1;
-            text-align: center;
-            font-size: 13px;
-            color: #7982a9;
-            font-weight: 500;
+        #page-header h1 {
+            font-size: 0.85rem;
+            margin: 0;
+            padding: 0 1ch;
+            background: #2c2c2c;
+            /* slight spacing so the ASCII border frames it nicely */
+            letter-spacing: 0.05em;
         }
 
         .github-link {
             display: flex;
             align-items: center;
-            color: #7982a9;
+            gap: 0.4ch;
             text-decoration: none;
-            transition: color 0.2s;
+            padding: 0 1ch;
+            background: #2c2c2c;
+            font-size: 0.8rem;
+            color: #6a6f87;
         }
 
         .github-link:hover {
-            color: #c0caf5;
+            color: #2c2c2c;
         }
 
         .github-icon {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             fill: currentColor;
+            flex-shrink: 0;
         }
 
+        /* ── ASCII box wrapping the terminal ───────── */
+        #terminal-box {
+            width: 100%;
+            /* use webtui box utility – shear top so the header title overlaps */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── xterm container ────────────────────────── */
         #terminal-container {
-            flex-grow: 1;
-            padding: 15px;
+            flex: 1 1 auto;
+            height: 65vh;
+            min-height: 400px;
+            padding: 0.5rem;
             box-sizing: border-box;
             display: flex;
-            justify-content: center;
         }
 
-        /* Customize xterm scrollbar */
-        .xterm-viewport::-webkit-scrollbar {
-            width: 8px;
+        #terminal-container .xterm {
+            flex: 1;
         }
-        .xterm-viewport::-webkit-scrollbar-track {
-            background: transparent;
+
+        #terminal-container .xterm-screen {
+            padding: 1rem;
+            box-sizing: border-box;
         }
+
+        /* ── mobile controls ─────────────────────────── */
+        #mobile-controls {
+            display: none;
+            padding: 0.75rem 0.5rem;
+            border-top: 1px solid var(--color-bg3, rgba(255,255,255,0.1));
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        /* override webtui button defaults for mobile touch targets */
+        #mobile-controls [is-="button"] {
+            justify-content: center;
+            padding-block: 0.8rem;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            touch-action: manipulation;
+        }
+
+        .btn-undo  { color: var(--color-yellow,  #e0af68); }
+        .btn-pull  { color: var(--color-green,  #9ece6a); }
+        .btn-pull.active {
+            background: var(--color-green, #9ece6a);
+            color: var(--color-bg0, #1a1b26);
+        }
+
+        /* ── xterm scrollbar ─────────────────────────── */
+        .xterm-viewport::-webkit-scrollbar       { width: 6px; }
+        .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
         .xterm-viewport::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
         }
-        /* Center the actual terminal within its flex container */
-        .xterm {
-            padding: 2px;
+
+        /* ── responsive ──────────────────────────────── */
+        @media (max-width: 768px) {
+            #app      { width: 95vw; }
+            #terminal-container { height: 55vh; }
+        }
+
+        @media (max-width: 480px) {
+            #app { width: 100vw; }
+            #terminal-container { height: 50vh; min-height: 300px; }
+            #mobile-controls { display: block; }
         }
     </style>
 </head>
 <body>
-    <div id="terminal-wrapper">
-        <div id="terminal-header">
-            <div class="window-controls">
-                <div class="control close"></div>
-                <div class="control minimize"></div>
-                <div class="control maximize"></div>
-            </div>
-            <div id="terminal-title">Push Pull - WebAssembly</div>
+    <div id="app">
+
+        <!-- Page header – sits above the ASCII box border -->
+        <div id="page-header">
+            <h1>Push Pull — WebAssembly</h1>
             <a href="https://github.com/riceball-tw/push-pull" target="_blank" class="github-link" title="View on GitHub">
                 <svg class="github-icon" viewBox="0 0 16 16">
                     <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
                 </svg>
+                GitHub
             </a>
         </div>
-        <div id="terminal-container"></div>
-        <div id="mobile-controls">
-            <div class="control-group">
-                <div class="mobile-btn btn-undo" onclick="sendKey('u')">Undo</div>
-                <div class="mobile-btn" onclick="sendKey('k')">↑</div>
-                <div class="mobile-btn btn-quit" onclick="sendKey('q')">Quit</div>
-                <div class="mobile-btn" onclick="sendKey('h')">←</div>
-                <div class="mobile-btn" onclick="sendKey('j')">↓</div>
-                <div class="mobile-btn" onclick="sendKey('l')">→</div>
-                <div class="mobile-btn btn-pull" id="pull-btn" onclick="togglePull()">Pull</div>
-                <div class="mobile-btn" style="visibility: hidden;"></div>
+
+        <!-- ASCII box containing the terminal -->
+        <div id="terminal-box" box-="square">
+            <div id="terminal-container"></div>
+            <div id="mobile-controls">
+                <div class="control-group">
+                    <div is-="button" class="btn-undo" onclick="sendKey('u')">Undo</div>
+                    <div is-="button" onclick="sendKey('k')">↑</div>
+                    <div is-="button" class="btn-pull" id="pull-btn" onclick="togglePull()">Pull</div>
+                    <div is-="button" onclick="sendKey('h')">←</div>
+                    <div is-="button" onclick="sendKey('j')">↓</div>
+                    <div is-="button" onclick="sendKey('l')">→</div>
+                    <div style="visibility:hidden"></div>
+                </div>
             </div>
         </div>
+
     </div>
+
     <script>
         // Setup xterm.js
         const term = new Terminal({
             theme: {
-                background: '#24283b',
+                background: 'var(--color-bg1, #24283b)',
                 foreground: '#c0caf5',
-                cursor: '#c0caf5',
+                cursor:     '#c0caf5',
                 selectionBackground: 'rgba(255, 255, 255, 0.15)',
-                black: '#1d202f',
-                red: '#f7768e',
-                green: '#9ece6a',
-                yellow: '#e0af68',
-                blue: '#7aa2f7',
-                magenta: '#bb9af7',
-                cyan: '#7dcfff',
-                white: '#a9b1d6',
-                brightBlack: '#414868',
-                brightRed: '#f7768e',
-                brightGreen: '#9ece6a',
+                black:        '#1d202f',
+                red:          '#f7768e',
+                green:        '#9ece6a',
+                yellow:       '#e0af68',
+                blue:         '#7aa2f7',
+                magenta:      '#bb9af7',
+                cyan:         '#7dcfff',
+                white:        '#a9b1d6',
+                brightBlack:  '#414868',
+                brightRed:    '#f7768e',
+                brightGreen:  '#9ece6a',
                 brightYellow: '#e0af68',
-                brightBlue: '#7aa2f7',
-                brightMagenta: '#bb9af7',
-                brightCyan: '#7dcfff',
-                brightWhite: '#c0caf5'
+                brightBlue:   '#7aa2f7',
+                brightMagenta:'#bb9af7',
+                brightCyan:   '#7dcfff',
+                brightWhite:  '#c0caf5'
             },
-            fontFamily: '"JetBrains Mono", "Fira Code", "PingFang SC", "Microsoft YaHei", "Source Han Sans", sans-serif, monospace',
+            fontFamily: '"JetBrains Mono", "Fira Code", "PingFang SC", "Microsoft YaHei", "Source Han Sans", monospace',
             fontSize: window.innerWidth < 480 ? 12 : 16,
             fontWeight: 400,
             lineHeight: 1.1,
@@ -296,21 +239,19 @@
             }
             fitAddon.fit();
         });
-        
+
         const fitAddon = new FitAddon.FitAddon();
         term.loadAddon(fitAddon);
-        
+
         term.open(document.getElementById('terminal-container'));
-        
+
         // Wait for fonts to load before fitting
         if (document.fonts) {
-            document.fonts.ready.then(() => {
-                fitAddon.fit();
-            });
+            document.fonts.ready.then(() => { fitAddon.fit(); });
         } else {
             setTimeout(() => fitAddon.fit(), 100);
         }
-        
+
         // Make terminal available to Go side
         window.term = term;
 
@@ -325,15 +266,6 @@
             if (pullActive && ['h', 'j', 'k', 'l'].includes(key)) {
                 out = key.toUpperCase();
             }
-            // Trigger the onData event manually
-            // Since xterm.js doesn't have an easy public way to trigger 'onData',
-            // and our Go code listens to onData, we use this trick:
-            // xterm's core uses a handler for data.
-            // But we can just use the terminal's internal event emitter if needed,
-            // however, a more reliable way is to have the Go code listen to a custom 
-            // function we provide.
-            
-            // For now, let's try to find the callback from Go
             if (window._wasmOnData) {
                 window._wasmOnData(out);
             }
