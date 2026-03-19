@@ -149,13 +149,20 @@
             justify-content: center;
             padding-block: 0.8rem;
             font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
             width: 100%;
             touch-action: manipulation;
         }
 
-        .btn-undo  { color: var(--yellow,  #f9e2af); }
-        .btn-pull  { color: var(--green,  #a6e3a1); }
+        .btn-undo  { 
+            background: var(--yellow, #f9e2af);
+            color: var(--background0);
+        }
+        .btn-pull  { 
+            background: var(--background2, #313244);
+            color: var(--green, #a6e3a1); 
+        }
         .btn-pull.active {
             background: var(--green, #a6e3a1);
             color: var(--background0);
