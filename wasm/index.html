@@ -5,15 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Pull - WebAssembly</title>
 
-    <!-- xterm.js -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
-
     <!-- Go WASM execution -->
     <script src="wasm_exec.js"></script>
 
-    <!-- WebTUI – full library via CDN -->
+    <!-- WebTUI – provides CSS variables and box layout -->
     <style>
         @import 'https://cdn.jsdelivr.net/npm/@webtui/css@0.0.3/dist/full.css';
         @import 'https://cdn.jsdelivr.net/npm/@webtui/theme-catppuccin/dist/index.css';
@@ -57,7 +52,6 @@
             justify-content: space-between;
             padding: 0 2ch;
             box-sizing: border-box;
-            /* shear the header so it sits flush on the box top border */
             transform: translateY(10%);
             z-index: 2;
         }
@@ -66,16 +60,13 @@
             font-size: 0.85rem;
             margin: 0;
             padding: 0 1ch;
-            /* slight spacing so the ASCII border frames it nicely */
             letter-spacing: 0.05em;
         }
 
         #page-header h1[is-="badge"] {
-            /* Inherit or override badge styles to blend with the header layout */
             line-height: 1.4;
             --badge-color: var(--background0);
             --badge-text: var(--foreground0);
-            /* Ensure it covers the border */
             box-shadow: 0 0 0 2px var(--background0);
         }
 
@@ -88,7 +79,6 @@
             background: var(--background0);
             font-size: 0.8rem;
             color: var(--foreground2);
-            /* Ensure it covers the border */
             box-shadow: 0 0 0 2px var(--background0);
             border-radius: 4px;
         }
@@ -108,12 +98,11 @@
         #terminal-box {
             position: relative;
             width: 100%;
-            /* use webtui box utility – shear top so the header title overlaps */
             display: flex;
             flex-direction: column;
         }
 
-        /* ── xterm container ────────────────────────── */
+        /* ── wterm container ──────────────────────────── */
         #terminal-container {
             flex: 1 1 auto;
             height: 65vh;
@@ -123,13 +112,125 @@
             display: flex;
         }
 
-        #terminal-container .xterm {
+        #terminal-container .wterm {
             flex: 1;
         }
 
-        #terminal-container .xterm-screen {
-            padding: 1rem;
-            box-sizing: border-box;
+        /* ── wterm Catppuccin theme ───────────────────── */
+        /* Maps webtui Catppuccin CSS vars to wterm's --term-* custom props */
+        #terminal-container .wterm {
+            --term-bg: var(--background0, #1e1e2e);
+            --term-fg: var(--foreground0, #cdd6f4);
+            --term-cursor: var(--foreground0, #cdd6f4);
+
+            --term-color-0:  var(--background0, #1e1e2e);
+            --term-color-1:  var(--red, #f38ba8);
+            --term-color-2:  var(--green, #a6e3a1);
+            --term-color-3:  var(--yellow, #f9e2af);
+            --term-color-4:  var(--blue, #89b4fa);
+            --term-color-5:  var(--mauve, #cba6f7);
+            --term-color-6:  var(--teal, #94e2d5);
+            --term-color-7:  var(--foreground0, #cdd6f4);
+            --term-color-8:  var(--background2, #313244);
+            --term-color-9:  var(--red, #f38ba8);
+            --term-color-10: var(--green, #a6e3a1);
+            --term-color-11: var(--yellow, #f9e2af);
+            --term-color-12: var(--blue, #89b4fa);
+            --term-color-13: var(--mauve, #cba6f7);
+            --term-color-14: var(--teal, #94e2d5);
+            --term-color-15: var(--foreground0, #cdd6f4);
+
+            --term-font-family: '"JetBrains Mono", "Fira Code", "PingFang SC", "Microsoft YaHei", "Source Han Sans", monospace';
+            --term-font-size: 16px;
+            --term-line-height: 1.1;
+        }
+
+        /* ── responsive font size (replaces JS resize handler) ── */
+        @media (max-width: 480px) {
+            #terminal-container .wterm {
+                --term-font-size: 12px;
+            }
+        }
+
+        /* ── wterm base styles ──────────────────────────── */
+        #terminal-container .wterm {
+            position: relative;
+            background: var(--term-bg);
+            color: var(--term-fg);
+            font-family: var(--term-font-family);
+            font-size: var(--term-font-size);
+            line-height: var(--term-line-height);
+            padding: 12px;
+            outline: none;
+            overflow: hidden;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        #terminal-container .wterm:focus,
+        #terminal-container .wterm:focus-visible {
+            outline: none;
+        }
+
+        .term-grid {
+            display: block;
+            white-space: pre;
+            contain: layout paint style;
+            will-change: contents;
+        }
+
+        .term-row {
+            display: block;
+            height: var(--term-row-height);
+            line-height: var(--term-row-height);
+            contain: layout style;
+        }
+
+        .term-row > span {
+            display: inline-block;
+            height: var(--term-row-height);
+            vertical-align: top;
+        }
+
+        .term-block {
+            width: 1ch;
+            overflow: hidden;
+        }
+
+        .term-cursor {
+            outline: 1px solid var(--term-cursor);
+            outline-offset: -1px;
+        }
+
+        .wterm.focused .term-cursor {
+            background: var(--term-cursor);
+            color: var(--term-bg);
+            outline: none;
+        }
+
+        .wterm.focused.cursor-blink .term-cursor {
+            animation: cursor-blink 1s step-end infinite;
+        }
+
+        @keyframes cursor-blink {
+            0%, 100% { background: var(--term-cursor); color: var(--term-bg); }
+            50% { background: transparent; color: inherit; }
+        }
+
+        .wterm.has-scrollback {
+            overflow-y: auto;
+        }
+
+        .wterm ::selection {
+            background: var(--background2, rgba(86, 156, 214, 0.3));
+        }
+
+        /* ── wterm scrollbar ──────────────────────────── */
+        .wterm.has-scrollback::-webkit-scrollbar       { width: 6px; }
+        .wterm.has-scrollback::-webkit-scrollbar-track { background: transparent; }
+        .wterm.has-scrollback::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
         }
 
         /* ── mobile controls ─────────────────────────── */
@@ -145,7 +246,6 @@
             gap: 0.5rem;
         }
 
-        /* override webtui button defaults for mobile touch targets */
         #mobile-controls [is-="button"] {
             justify-content: center;
             padding-block: 0.8rem;
@@ -167,14 +267,6 @@
         .btn-pull.active {
             background: var(--green, #a6e3a1);
             color: var(--background0);
-        }
-
-        /* ── xterm scrollbar ─────────────────────────── */
-        .xterm-viewport::-webkit-scrollbar       { width: 6px; }
-        .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
-        .xterm-viewport::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.15);
-            border-radius: 3px;
         }
 
         /* ── responsive ──────────────────────────────── */
@@ -222,98 +314,52 @@
 
     </div>
 
+    <!-- wterm bundle – creates WTerm, exposes window.term with xterm-compat API -->
+    <script src="wterm-bundle.js"></script>
+
     <script>
-        // Setup xterm.js
-        const term = new Terminal({
-            theme: {
-                background: 'var(--background0)',
-                foreground: 'var(--foreground0)',
-                cursor:     'var(--foreground0)',
-                selectionBackground: 'var(--background2)',
-                black:        'var(--background0)',
-                red:          'var(--red, #f38ba8)',
-                green:        'var(--green, #a6e3a1)',
-                yellow:       'var(--yellow, #f9e2af)',
-                blue:         'var(--blue, #89b4fa)',
-                magenta:      'var(--mauve, #cba6f7)',
-                cyan:         'var(--teal, #94e2d5)',
-                white:        'var(--foreground0)',
-                brightBlack:  'var(--background2)',
-                brightRed:    'var(--red, #f38ba8)',
-                brightGreen:  'var(--green, #a6e3a1)',
-                brightYellow: 'var(--yellow, #f9e2af)',
-                brightBlue:   'var(--blue, #89b4fa)',
-                brightMagenta:'var(--mauve, #cba6f7)',
-                brightCyan:   'var(--teal, #94e2d5)',
-                brightWhite:  'var(--foreground0)'
-            },
-            fontFamily: '"JetBrains Mono", "Fira Code", "PingFang SC", "Microsoft YaHei", "Source Han Sans", monospace',
-            fontSize: window.innerWidth < 480 ? 12 : 16,
-            fontWeight: 400,
-            lineHeight: 1.1,
-            letterSpacing: 0,
-            cursorBlink: true,
-            cursorStyle: 'block'
-        });
+        (async function() {
+            // Wait for wterm to finish initializing (Zig WASM binary loaded)
+            await window._wtermReady;
 
-        // Dynamic font size on resize
-        window.addEventListener('resize', () => {
-            const newFontSize = window.innerWidth < 480 ? 12 : 16;
-            if (term.options.fontSize !== newFontSize) {
-                term.options.fontSize = newFontSize;
+            function togglePull() {
+                const btn = document.getElementById('pull-btn');
+                btn.classList.toggle('active');
             }
-            fitAddon.fit();
-        });
 
-        const fitAddon = new FitAddon.FitAddon();
-        term.loadAddon(fitAddon);
-
-        term.open(document.getElementById('terminal-container'));
-
-        // Wait for fonts to load before fitting
-        if (document.fonts) {
-            document.fonts.ready.then(() => { fitAddon.fit(); });
-        } else {
-            setTimeout(() => fitAddon.fit(), 100);
-        }
-
-        // Make terminal available to Go side
-        window.term = term;
-
-        function togglePull() {
-            const btn = document.getElementById('pull-btn');
-            btn.classList.toggle('active');
-        }
-
-        function sendKey(key) {
-            const pullActive = document.getElementById('pull-btn').classList.contains('active');
-            let out = key;
-            if (pullActive && ['h', 'j', 'k', 'l'].includes(key)) {
-                out = key.toUpperCase();
+            function sendKey(key) {
+                const pullActive = document.getElementById('pull-btn').classList.contains('active');
+                let out = key;
+                if (pullActive && ['h', 'j', 'k', 'l'].includes(key)) {
+                    out = key.toUpperCase();
+                }
+                if (window._wasmOnData) {
+                    window._wasmOnData(out);
+                }
             }
-            if (window._wasmOnData) {
-                window._wasmOnData(out);
+
+            // Temporarily expose for inline onclick handlers
+            window.togglePull = togglePull;
+            window.sendKey = sendKey;
+
+            // Load and run the WebAssembly module
+            if (!WebAssembly.instantiateStreaming) {
+                WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                    const source = await (await resp).arrayBuffer();
+                    return await WebAssembly.instantiate(source, importObject);
+                };
             }
-        }
 
-        // Load and run the WebAssembly module
-        if (!WebAssembly.instantiateStreaming) {
-            // polyfill
-            WebAssembly.instantiateStreaming = async (resp, importObject) => {
-                const source = await (await resp).arrayBuffer();
-                return await WebAssembly.instantiate(source, importObject);
-            };
-        }
-
-        const go = new Go();
-        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
-            term.write("\x1b[2J\x1b[H"); // Clear screen
-            term.focus();
-            go.run(result.instance);
-        }).catch((err) => {
-            console.error("Failed to load Wasm:", err);
-            term.write("\r\n\x1b[31mFailed to load application.\x1b[0m\r\n");
-        });
+            const go = new Go();
+            WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+                window.term.write("\x1b[2J\x1b[H"); // Clear screen
+                window.term.focus();
+                go.run(result.instance);
+            }).catch((err) => {
+                console.error("Failed to load Wasm:", err);
+                window.term.write("\r\n\x1b[31mFailed to load application.\x1b[0m\r\n");
+            });
+        })();
     </script>
 </body>
 </html>

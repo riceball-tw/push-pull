@@ -29,4 +29,8 @@ GOOS=js GOARCH=wasm go build -mod=vendor -o ./wasm/main.wasm ./cmd/wasm
 echo "Cleaning up temporary vendor folder..."
 rm -rf vendor
 
+echo "Building wterm JS bundle..."
+npm install --prefix ./wasm --silent
+npm run build --prefix ./wasm
+
 echo "Done! Run 'go run ./wasm/serve.go' to start the local server."
