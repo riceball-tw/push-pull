@@ -73,13 +73,11 @@ func main() {
 	// Seed initial size so Bubble Tea knows how wide/tall the xterm surface is.
 	sendWindowSize(term.Get("cols").Int(), term.Get("rows").Int())
 
-	// Keep Bubble Tea in sync with xterm.js resizing (fit addon updates cols/rows).
+	// Keep Bubble Tea in sync with wterm resizing.
 	onResize := js.FuncOf(func(this js.Value, args []js.Value) any {
-		evt := term
-		if len(args) > 0 {
-			evt = args[0]
+		if len(args) >= 2 {
+			sendWindowSize(args[0].Int(), args[1].Int())
 		}
-		sendWindowSize(evt.Get("cols").Int(), evt.Get("rows").Int())
 		return nil
 	})
 	defer onResize.Release()
