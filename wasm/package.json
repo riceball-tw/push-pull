@@ -1,0 +1,16 @@
+{
+  "name": "push-pull-wasm",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "cp node_modules/@wterm/core/wasm/wterm.wasm .",
+    "build": "esbuild terminal.js --bundle --outfile=wterm-bundle.js --loader:.css=text",
+    "rebuild": "npm install && npm run build"
+  },
+  "dependencies": {
+    "@wterm/dom": "^0.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
